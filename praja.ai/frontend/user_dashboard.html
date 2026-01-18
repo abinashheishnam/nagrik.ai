@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>My Dashboard | Praja.ai</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <style>
+        :root {
+            /* Gov Palette - Matching Admin */
+            --gov-blue-dark: #0f172a;
+            --gov-blue-primary: #1e3a8a;
+            --gov-blue-accent: #3b82f6;
+            --gov-gold: #b45309;
+            --gov-bg: #f8fafc;
+            --surface: #ffffff;
+            --border: #e2e8f0;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+
+            /* Status Colors */
+            --crt-bg: #fef2f2;
+            --crt-txt: #991b1b;
+            --high-bg: #fff7ed;
+            --high-txt: #9a3412;
+            --med-bg: #f0fdf4;
+            --med-txt: #166534;
+            --low-bg: #eff6ff;
+            --low-txt: #1e40af;
+        }
+
+        /* Base Reset */
+        * {
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--gov-bg);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- Header --- */
+        .gov-header {
+            background: #ffffff;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            border-bottom: 1px solid var(--border);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+            z-index: 50;
+            flex-shrink: 0;
+        }
+
+        .brand-section {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+        }
+
+        .emblem {
+            height: 42px;
+            width: auto;
+        }
+
+        .brand-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand-title {
+            font-family: 'Merriweather', serif;
+            font-weight: 900;
+            font-size: 18px;
+            color: var(--gov-blue-primary);
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+        }
+
+        .brand-subtitle {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--gov-gold);
+            font-weight: 700;
+            margin-top: 2px;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .btn-new-report {
+            background: var(--gov-blue-primary);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(30, 58, 138, 0.2);
+        }
+
+        .btn-new-report:hover {
+            background: #1e40af;
+            transform: translateY(-1px);
+        }
+
+        .btn-logout {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-logout:hover {
+            background: #f1f5f9;
+            color: #0f172a;
+        }
+
+        /* --- Main Layout --- */
+        .main-stage {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            /* Center content for citizens */
+            overflow: hidden;
+        }
+
+        .content-area {
+            width: 100%;
+            max-width: 1200px;
+            padding: 32px 40px;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+
+        .page-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            font-family: 'Merriweather', serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--gov-blue-dark);
+        }
+
+        .user-welcome {
+            font-size: 14px;
+            color: var(--text-sub);
+        }
+
+        /* --- Stats Row --- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.04);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-sub);
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .stat-val {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--gov-blue-dark);
+            margin-top: 8px;
+            letter-spacing: -0.03em;
+        }
+
+        /* --- Data Panel --- */
+        .data-panel {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            min-height: 500px;
+        }
+
+        .panel-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fcfcfc;
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--gov-blue-dark);
+        }
+
+        .table-container {
+            flex: 1;
+            overflow: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            white-space: nowrap;
+        }
+
+        thead th {
+            text-align: left;
+            padding: 16px 24px;
+            background: #f8fafc;
+            color: var(--text-sub);
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-bottom: 1px solid var(--border);
+        }
+
+        tbody td {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+            color: var(--text-main);
+            vertical-align: middle;
+        }
+
+        tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+
+        .pill.open {
+            background: var(--low-bg);
+            color: var(--low-txt);
+            border: 1px solid #dbeafe;
+        }
+
+        .pill.closed {
+            background: var(--med-bg);
+            color: var(--med-txt);
+            border: 1px solid #dcfce7;
+        }
+
+        .pill.pending {
+            background: var(--high-bg);
+            color: var(--high-txt);
+            border: 1px solid #ffedd5;
+        }
+
+        .btn-view {
+            background: white;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-view:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+
+        /* --- Modal --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .modal-card {
+            background: #ffffff;
+            width: 100%;
+            max-width: 700px;
+            max-height: 85vh;
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8fafc;
+        }
+
+        .modal-title-block h2 {
+            margin: 0;
+            font-family: 'Merriweather', serif;
+            font-size: 18px;
+            color: var(--gov-blue-dark);
+        }
+
+        .btn-close-modal {
+            background: transparent;
+            border: none;
+            font-size: 20px;
+            color: var(--text-sub);
+            cursor: pointer;
+        }
+
+        .modal-body {
+            padding: 32px;
+            overflow-y: auto;
+            background: white;
+        }
+
+        .info-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: #94a3b8;
+            margin-bottom: 4px;
+        }
+
+        .info-value {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text-main);
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        #mapContainer {
+            height: 200px;
+            width: 100%;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            margin-top: 8px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+            color: var(--text-sub);
+        }
+
+        .empty-state-icon {
+            font-size: 40px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="gov-header">
+        <div class="brand-section" onclick="window.location.href='index.html'">
+            <img src="assets/manipur_emblem.png" alt="Emblem" class="emblem">
+            <div class="brand-text">
+                <div class="brand-title">Manipur Grievance Portal</div>
+                <div class="brand-subtitle">Government of Manipur</div>
+            </div>
+        </div>
+        <div class="header-controls">
+            <a href="index.html" class="btn-new-report">+ New Report</a>
+            <button onclick="logout()" class="btn-logout">Sign Out</button>
+        </div>
+    </header>
+
+    <div class="main-stage">
+        <div class="content-area">
+
+            <div class="page-title-row">
+                <div>
+                    <div class="page-title">My Dashboard</div>
+                    <div class="user-welcome">Welcome back, Citizen</div>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Submitted</div>
+                    <div class="stat-val" id="valTotal">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Resolved</div>
+                    <div class="stat-val" style="color:var(--med-txt);" id="valResolved">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">In Progress</div>
+                    <div class="stat-val" style="color:var(--gov-blue-accent);" id="valProgress">-</div>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="data-panel">
+                <div class="panel-header">
+                    <div class="panel-title">Your Grievance History</div>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th width="80">Ref ID</th>
+                                <th>Subject</th>
+                                <th>Category</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th style="text-align:right;">Details</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <!-- JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="detailModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title-block">
+                    <h2>Grievance Details</h2>
+                    <span style="font-size:12px; color:#64748b;" id="modalRefId">#</span>
+                </div>
+                <button class="btn-close-modal" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-body">
+
+                <div class="info-label">Subject</div>
+                <div class="info-value" style="font-weight:700; font-size:18px;" id="modalTitle">-</div>
+
+                <div class="info-label">Description</div>
+                <div class="info-value"
+                    style="background:#f8fafc; padding:16px; border-radius:8px; border:1px solid #e2e8f0;"
+                    id="modalDesc">-</div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                    <div>
+                        <div class="info-label">Category</div>
+                        <div class="info-value" id="modalCat">-</div>
+                    </div>
+                    <div>
+                        <div class="info-label">Current Status</div>
+                        <div class="info-value" id="modalStatus">-</div>
+                    </div>
+                </div>
+
+                <div class="info-label">Location / Address</div>
+                <div class="info-value" id="modalAddress">-</div>
+
+                <div class="info-label">Map View</div>
+                <div id="mapContainer"></div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API = "http://127.0.0.1:8000/api/v1";
+        const token = localStorage.getItem("USER_TOKEN");
+        let currentData = [];
+        let map = null, marker = null;
+
+        if (!token) window.location.href = "user_login.html";
+
+        function logout() {
+            localStorage.removeItem("USER_TOKEN");
+            localStorage.removeItem("ROLE");
+            window.location.href = "user_login.html";
+        }
+
+        async function loadMyData() {
+            try {
+                const res = await fetch(`${API}/complaints/my`, {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+
+                if (res.status === 401) return logout();
+
+                const data = await res.json();
+                currentData = data || [];
+
+                updateStats(data);
+                renderTable(data);
+            } catch (e) {
+                console.error("Fetch error", e);
+            }
+        }
+
+        function renderTable(list) {
+            const tbody = document.getElementById("tableBody");
+
+            if (!list || list.length === 0) {
+                tbody.innerHTML = `
+                    <tr><td colspan="6">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📂</div>
+                            <div>No grievance records found.</div>
+                            <div style="font-size:12px; margin-top:8px;">Submit a new report to see it here.</div>
+                        </div>
+                    </td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = list.map((c, i) => {
+                const date = new Date(c.created_at).toLocaleDateString();
+                const status = c.status || "Open";
+                let pillClass = "open";
+                if (status === "Resolved") pillClass = "closed";
+
+                return `
+                <tr>
+                    <td style="color:#64748b; font-family:'Geist Mono', monospace;">#${c.id}</td>
+                    <td style="font-weight:600; color:#0f172a;">${escapeHTML(c.title)}</td>
+                    <td>${c.ai_category || c.category || "General"}</td>
+                    <td><span class="pill ${pillClass}">${status.toUpperCase()}</span></td>
+                    <td style="color:#64748b; font-size:13px;">${date}</td>
+                    <td style="text-align:right;">
+                        <button onclick="viewDetails(${i})" class="btn-view">View</button>
+                    </td>
+                </tr>
+            `}).join("");
+        }
+
+        function updateStats(data) {
+            document.getElementById("valTotal").innerText = data.length;
+            document.getElementById("valResolved").innerText = data.filter(d => d.status === "Resolved").length;
+            document.getElementById("valProgress").innerText = data.filter(d => d.status === "Open").length;
+        }
+
+        function viewDetails(index) {
+            const item = currentData[index];
+            if (!item) return;
+
+            setText("modalTitle", item.title);
+            setText("modalDesc", item.description);
+            setText("modalCat", item.ai_category || item.category);
+            setText("modalStatus", item.status || "Open");
+            setText("modalAddress", item.address);
+            setText("modalRefId", `Reference #${item.id}`);
+
+            document.getElementById("detailModal").classList.add("active");
+            setTimeout(() => initMap(item), 100);
+        }
+
+        function closeModal() {
+            document.getElementById("detailModal").classList.remove("active");
+        }
+
+        function setText(id, val) {
+            const el = document.getElementById(id);
+            if (el) el.innerText = val || "-";
+        }
+
+        function escapeHTML(str) { return String(str || "").replaceAll("<", "&lt;").replaceAll(">", "&gt;"); }
+
+        function initMap(item) {
+            const lat = item.latitude;
+            const lon = item.longitude;
+
+            if (!map) {
+                map = L.map('mapContainer', { zoomControl: false }).setView([24.817, 93.936], 10);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            }
+
+            if (lat && lon) {
+                map.setView([lat, lon], 15);
+                if (marker) marker.remove();
+                marker = L.marker([lat, lon]).addTo(map).bindPopup("Incident Location").openPopup();
+            } else {
+                map.setView([24.817, 93.936], 10);
+                if (marker) marker.remove();
+            }
+            map.invalidateSize();
+        }
+
+        loadMyData();
+
+    </script>
+</body>
+
+</html>

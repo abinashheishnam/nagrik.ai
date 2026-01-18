@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Unified Login | Praja.ai</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            /* Gov Palette */
+            --gov-blue-dark: #0f172a;
+            --gov-blue-primary: #1e3a8a;
+            --gov-blue-accent: #3b82f6;
+            --gov-gold: #b45309;
+            --gov-bg: #f8fafc;
+            --surface: #ffffff;
+            --border: #e2e8f0;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --err: #dc2626;
+            --success: #16a34a;
+        }
+
+        * {
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--gov-bg);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-image: radial-gradient(circle at 50% 0%, #eff6ff 0%, transparent 40%);
+        }
+
+        /* --- Global Header --- */
+        .gov-header {
+            background: #ffffff;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* Centered for login page */
+            padding: 0 32px;
+            border-bottom: 1px solid var(--border);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+            z-index: 50;
+        }
+
+        .brand-section {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .emblem {
+            height: 42px;
+            width: auto;
+        }
+
+        .brand-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand-title {
+            font-family: 'Merriweather', serif;
+            font-weight: 900;
+            font-size: 18px;
+            color: var(--gov-blue-primary);
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+        }
+
+        .brand-subtitle {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--gov-gold);
+            font-weight: 700;
+            margin-top: 2px;
+        }
+
+        /* --- Login Card --- */
+        .main-stage {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: #ffffff;
+            width: 100%;
+            max-width: 420px;
+            padding: 40px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+            animation: slideUp 0.4s ease-out;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f1f5f9;
+            padding: 4px;
+            border-radius: 8px;
+            margin-bottom: 32px;
+        }
+
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-sub);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .tab.active {
+            background: #ffffff;
+            color: var(--gov-blue-primary);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-family: 'Merriweather', serif;
+            font-size: 24px;
+            color: var(--gov-blue-dark);
+            margin: 0 0 8px 0;
+            text-align: center;
+        }
+
+        p {
+            text-align: center;
+            color: var(--text-sub);
+            font-size: 14px;
+            margin: 0 0 32px 0;
+        }
+
+        .form-group {
+            display: none;
+        }
+
+        .form-group.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--gov-blue-primary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 15px;
+            color: var(--text-main);
+            background: #f8fafc;
+            margin-bottom: 16px;
+            transition: 0.2s;
+            font-family: inherit;
+        }
+
+        input:focus {
+            background: white;
+            border-color: var(--gov-blue-accent);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--gov-blue-primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 8px;
+        }
+
+        .btn:hover {
+            background: #1e40af;
+            transform: translateY(-1px);
+        }
+
+        .btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .toggle-link {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 13px;
+            color: var(--text-sub);
+            cursor: pointer;
+        }
+
+        .toggle-link span {
+            color: var(--gov-blue-accent);
+            font-weight: 600;
+        }
+
+        .toggle-link span:hover {
+            text-decoration: underline;
+        }
+
+        .msg {
+            margin-top: 16px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            text-align: center;
+            display: none;
+        }
+
+        .msg.err {
+            background: #fef2f2;
+            color: var(--err);
+            border: 1px solid #fee2e2;
+        }
+
+        .msg.ok {
+            background: #f0fdf4;
+            color: var(--success);
+            border: 1px solid #bbf7d0;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="gov-header">
+        <div class="brand-section">
+            <img src="assets/manipur_emblem.png" alt="Emblem" class="emblem">
+            <div class="brand-text">
+                <div class="brand-title">Manipur Grievance Portal</div>
+                <div class="brand-subtitle">Government of Manipur</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-stage">
+        <div class="login-card">
+
+            <div class="tabs">
+                <div class="tab active" onclick="setRole('citizen')">Citizen</div>
+                <div class="tab" onclick="setRole('admin')">Official</div>
+            </div>
+
+            <!-- Citizen Section -->
+            <div id="citizen-group" class="form-group active">
+                <h1 id="c-title">Citizen Login</h1>
+                <p id="c-desc">Access your grievance history</p>
+
+                <div id="c-signup-fields" style="display:none;">
+                    <label>Full Name</label>
+                    <input id="c-name" placeholder="E.g. John Doe" />
+                    <label>Email Address (Optional)</label>
+                    <input id="c-email" placeholder="john@example.com" />
+                </div>
+
+                <label>Phone Number / ID</label>
+                <input id="c-phone" placeholder="9876543210" />
+
+                <label>Password</label>
+                <input id="c-pass" type="password" placeholder="••••••••" />
+
+                <button class="btn" id="c-btn" onclick="handleCitizen()">Secure Login</button>
+
+                <div class="toggle-link" onclick="toggleMode('citizen')">
+                    <span id="c-toggle-text">New User? Create Account</span>
+                </div>
+            </div>
+
+            <!-- Admin Section -->
+            <div id="admin-group" class="form-group">
+                <h1 id="a-title">Official Portal</h1>
+                <p id="a-desc">Department administration access</p>
+
+                <label>Username</label>
+                <input id="a-user" placeholder="dept_admin" />
+
+                <label>Password</label>
+                <input id="a-pass" type="password" placeholder="••••••••" />
+
+                <div id="a-signup-fields" style="display:none;">
+                    <label>Secret Key code</label>
+                    <input id="a-secret" type="password" placeholder="Required for registration" />
+                </div>
+
+                <button class="btn" id="a-btn" onclick="handleAdmin()">Verify & Login</button>
+
+                <div class="toggle-link" onclick="toggleMode('admin')">
+                    <span id="a-toggle-text">Need to register a new admin?</span>
+                </div>
+            </div>
+
+            <div id="msg" class="msg"></div>
+
+        </div>
+    </div>
+
+    <script>
+        const API = "http://127.0.0.1:8000";
+        let role = 'citizen';
+        let modes = { citizen: 'login', admin: 'login' };
+
+        // -- Navigation & UI Logic --
+        function setRole(r) {
+            role = r;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            // 0 -> citizen, 1 -> admin
+            document.querySelectorAll('.tab')[r === 'citizen' ? 0 : 1].classList.add('active');
+
+            document.querySelectorAll('.form-group').forEach(g => g.classList.remove('active'));
+            document.getElementById(`${r}-group`).classList.add('active');
+
+            clearMsg();
+        }
+
+        function toggleMode(r) {
+            modes[r] = modes[r] === 'login' ? 'signup' : 'login';
+            updateUI(r);
+        }
+
+        function updateUI(r) {
+            const isLogin = modes[r] === 'login';
+            if (r === 'citizen') {
+                document.getElementById('c-title').innerText = isLogin ? "Citizen Login" : "Create Account";
+                document.getElementById('c-desc').innerText = isLogin ? "Access your grievance history" : "Join to report infrastructure issues";
+                document.getElementById('c-signup-fields').style.display = isLogin ? 'none' : 'block';
+                document.getElementById('c-btn').innerText = isLogin ? "Secure Login" : "Register Citizen";
+                document.getElementById('c-toggle-text').innerText = isLogin ? "New User? Create Account" : "Back to Login";
+            } else {
+                document.getElementById('a-title').innerText = isLogin ? "Official Portal" : "Admin Registration";
+                document.getElementById('a-desc').innerText = isLogin ? "Department administration access" : "Secure registration for officials";
+                document.getElementById('a-signup-fields').style.display = isLogin ? 'none' : 'block';
+                document.getElementById('a-btn').innerText = isLogin ? "Verify & Login" : "Create Admin ID";
+                document.getElementById('a-toggle-text').innerText = isLogin ? "Need to register a new admin?" : "Back to Official Login";
+            }
+            clearMsg();
+        }
+
+        function showMsg(text, type) {
+            const el = document.getElementById('msg');
+            el.innerText = text;
+            el.className = `msg ${type}`;
+            el.style.display = 'block';
+        }
+        function clearMsg() { document.getElementById('msg').style.display = 'none'; }
+
+        // -- API Logic --
+        async function handleCitizen() {
+            const isLogin = modes.citizen === 'login';
+            const phone = document.getElementById('c-phone').value.trim();
+            const pass = document.getElementById('c-pass').value.trim();
+
+            if (!phone || !pass) return showMsg("Please fill in credentials", "err");
+
+            const btn = document.getElementById('c-btn');
+            const originalText = btn.innerText;
+            btn.innerText = "Processing...";
+            btn.disabled = true;
+
+            try {
+                let url = isLogin ? `${API}/auth/user/login` : `${API}/auth/user/signup`;
+                let body = isLogin
+                    ? { identifier: phone, password: pass }
+                    : {
+                        phone: phone,
+                        password: pass,
+                        full_name: document.getElementById('c-name').value.trim(),
+                        email: document.getElementById('c-email').value.trim() || null
+                    };
+
+                const res = await fetch(url, {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+
+                if (!res.ok) throw new Error(data.detail || "Authentication failed");
+
+                localStorage.setItem("USER_TOKEN", data.access_token);
+                localStorage.setItem("ROLE", "user");
+                showMsg("Authentication Successful. Redirecting...", "ok");
+                setTimeout(() => window.location.href = "index.html", 1000);
+
+            } catch (e) {
+                showMsg(e.message, "err");
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        async function handleAdmin() {
+            const isLogin = modes.admin === 'login';
+            const user = document.getElementById('a-user').value.trim();
+            const pass = document.getElementById('a-pass').value.trim();
+
+            if (!user || !pass) return showMsg("Credentials required", "err");
+
+            const btn = document.getElementById('a-btn');
+            const originalText = btn.innerText;
+            btn.innerText = "Verifying...";
+            btn.disabled = true;
+
+            try {
+                let url = isLogin ? `${API}/auth/admin/login` : `${API}/auth/admin/signup`;
+                let body = { username: user, password: pass };
+                if (!isLogin) body.secret_key = document.getElementById('a-secret').value.trim();
+
+                const res = await fetch(url, {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+
+                if (!res.ok) throw new Error(data.detail || "Access Denied");
+
+                localStorage.setItem("ADMIN_TOKEN", data.access_token);
+                localStorage.setItem("ROLE", "admin");
+                showMsg("Identity Verified. Loading Dashboard...", "ok");
+                setTimeout(() => window.location.href = "admin.html", 1000);
+
+            } catch (e) {
+                showMsg(e.message, "err");
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+
+</html>

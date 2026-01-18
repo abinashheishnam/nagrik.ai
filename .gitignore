@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.env
+
+# Frontend
+node_modules/
+
+# IDE
+.vscode/
+
+# OS
+.DS_Store
+
+# Logs
+*.log
+
+# Local databases
+*.db
+*.sqlite3
+
+# Backend virtualenvs (common paths)
+praja.ai/backend/venv/
+backend/venv/
+
+# ML artifacts / models
+*.joblib
+*.pt
+*.pth
+*.onnx
+
+# Cache
+.cache/

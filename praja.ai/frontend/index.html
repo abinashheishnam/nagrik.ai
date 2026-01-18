@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Praja.ai | Citizen Reporting</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <style>
+    :root {
+      /* Gov Palette */
+      --gov-blue-dark: #0f172a;
+      --gov-blue-primary: #1e3a8a;
+      --gov-blue-accent: #3b82f6;
+      --gov-gold: #b45309;
+      --gov-bg: #f8fafc;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --text-main: #1e293b;
+      --text-sub: #64748b;
+
+      --ok: #16a34a;
+      --warn: #f59e0b;
+      --err: #dc2626;
+    }
+
+    * {
+      box-sizing: border-box;
+      outline: none;
+    }
+
+    body {
+      margin: 0;
+      background-color: var(--gov-bg);
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* --- Header --- */
+    .gov-header {
+      background: #ffffff;
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+      z-index: 50;
+      position: sticky;
+      top: 0;
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .emblem {
+      height: 42px;
+      width: auto;
+    }
+
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-title {
+      font-family: 'Merriweather', serif;
+      font-weight: 900;
+      font-size: 18px;
+      color: var(--gov-blue-primary);
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+
+    .brand-subtitle {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--gov-gold);
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Dropdown Menu */
+    .user-menu-container {
+      position: relative;
+    }
+
+    .avatar-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--gov-blue-primary);
+      color: white;
+      border: 2px solid #e0f2fe;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      transition: 0.2s;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      user-select: none;
+    }
+
+    .avatar-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+    }
+
+    .dropdown-menu {
+      position: absolute;
+      top: 52px;
+      right: 0;
+      width: 220px;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 100;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    .dropdown-menu.active {
+      display: flex;
+    }
+
+    .menu-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      background: #f8fafc;
+    }
+
+    .user-name-disp {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--gov-blue-dark);
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .user-role-disp {
+      font-size: 11px;
+      color: var(--text-sub);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .menu-item {
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-main);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: 0.2s;
+    }
+
+    .menu-item:hover {
+      background: #eff6ff;
+      color: var(--gov-blue-primary);
+    }
+
+    .menu-item.danger {
+      color: #dc2626;
+      border-top: 1px solid var(--border);
+    }
+
+    .menu-item.danger:hover {
+      background: #fef2f2;
+    }
+
+
+    /* --- Hero / Main --- */
+    .hero-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 40px 20px;
+      background: radial-gradient(circle at 50% 0%, #eff6ff 0%, transparent 40%);
+    }
+
+    .report-widget {
+      background: #ffffff;
+      width: 100%;
+      max-width: 640px;
+      border-radius: 16px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      animation: slideUp 0.4s ease-out;
+    }
+
+    .widget-header {
+      padding: 32px 32px 24px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .widget-title {
+      font-family: 'Merriweather', serif;
+      font-size: 24px;
+      font-weight: 900;
+      color: var(--gov-blue-dark);
+      margin: 0 0 8px;
+    }
+
+    .widget-sub {
+      color: var(--text-sub);
+      font-size: 14px;
+    }
+
+    .widget-body {
+      padding: 32px;
+    }
+
+    .input-group {
+      margin-bottom: 24px;
+      position: relative;
+    }
+
+    .input-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--gov-blue-primary);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      display: block;
+      letter-spacing: 0.02em;
+    }
+
+    input[type="text"],
+    textarea {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 15px;
+      color: var(--text-main);
+      font-family: inherit;
+      background: #f8fafc;
+      transition: 0.2s;
+    }
+
+    input[type="text"]:focus,
+    textarea:focus {
+      background: white;
+      border-color: var(--gov-blue-accent);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    /* Magic Button */
+    .magic-btn {
+      position: absolute;
+      right: 10px;
+      top: 32px;
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+      transition: 0.2s;
+      z-index: 5;
+    }
+
+    .magic-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 8px -1px rgba(37, 99, 235, 0.3);
+    }
+
+    .loc-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: #ecfdf5;
+      color: #059669;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid #d1fae5;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 16px;
+      background: var(--gov-blue-primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-submit:hover {
+      background: #1e40af;
+      transform: translateY(-1px);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    /* AI Box */
+    .ai-box {
+      background: #f0f9ff;
+      border: 1px dashed #bae6fd;
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 24px;
+      display: none;
+      /* hidden by default */
+      animation: fadeIn 0.3s;
+    }
+
+    .ai-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .ai-tag {
+      background: white;
+      border: 1px solid #e0f2fe;
+      color: #0284c7;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    /* --- Modals --- */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      animation: fadeIn 0.3s;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-card {
+      background: white;
+      width: 90%;
+      max-width: 500px;
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      animation: slideUp 0.3s;
+      position: relative;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: #f1f5f9;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: var(--text-sub);
+      transition: 0.2s;
+    }
+
+    .close-btn:hover {
+      background: #e2e8f0;
+      color: var(--err);
+    }
+
+    .modal-title {
+      font-family: 'Merriweather', serif;
+      font-size: 22px;
+      color: var(--gov-blue-dark);
+      margin-bottom: 24px;
+      font-weight: 900;
+    }
+
+    .profile-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .profile-label {
+      font-weight: 600;
+      color: var(--text-sub);
+      font-size: 13px;
+      text-transform: uppercase;
+    }
+
+    .profile-val {
+      font-weight: 700;
+      color: var(--gov-blue-primary);
+      font-size: 15px;
+    }
+
+    /* Analysis Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .stat-card {
+      background: #f8fafc;
+      padding: 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .stat-val {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--gov-blue-dark);
+    }
+
+    .stat-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-sub);
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    /* Dark Mode Toggle */
+    .setting-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #cbd5e1;
+      transition: .4s;
+      border-radius: 34px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked+.slider {
+      background-color: var(--gov-blue-primary);
+    }
+
+    input:checked+.slider:before {
+      transform: translateX(20px);
+    }
+
+    /* Dark Mode Variables Override */
+    body.dark-mode {
+      --gov-bg: #0b1120;
+      --surface: #1e293b;
+      --text-main: #f8fafc;
+      --text-sub: #94a3b8;
+      --border: #334155;
+      --gov-blue-dark: #f1f5f9;
+      --gov-blue-primary: #60a5fa;
+    }
+
+    body.dark-mode .modal-card,
+    body.dark-mode .gov-header,
+    body.dark-mode .report-widget,
+    body.dark-mode .dropdown-menu {
+      background-color: var(--surface);
+      border-color: var(--border);
+    }
+
+    body.dark-mode input,
+    body.dark-mode textarea {
+      background-color: #0f172a;
+      color: white;
+      border-color: var(--border);
+    }
+
+    body.dark-mode .menu-item:hover,
+    body.dark-mode .avatar-btn:hover {
+      background-color: #334155;
+    }
+
+    body.dark-mode .menu-header {
+      background-color: #0f172a;
+    }
+
+    body.dark-mode .stat-card {
+      background-color: #0f172a;
+      border-color: var(--border);
+    }
+
+    body.dark-mode .hero-container {
+      background: radial-gradient(circle at 50% 0%, #1e293b 0%, var(--gov-bg) 60%);
+    }
+
+
+    /* Toast */
+    #toastContainer {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 1000;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-5px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="gov-header">
+    <div class="brand-section">
+      <img src="assets/manipur_emblem.png" alt="Emblem" class="emblem">
+      <div class="brand-text">
+        <div class="brand-title">Manipur Grievance Portal</div>
+        <div class="brand-subtitle">Government of Manipur</div>
+      </div>
+    </div>
+
+    <!-- Header Controls with Dropdown -->
+    <div class="header-controls">
+      <div class="user-menu-container">
+        <div class="avatar-btn" id="avatarBtn" onclick="toggleMenu()">
+          <span id="userInitials">U</span>
+        </div>
+        <div class="dropdown-menu" id="userMenu">
+          <div class="menu-header">
+            <div class="user-name-disp" id="menuUserName">Loading...</div>
+            <div class="user-role-disp">Verified Account</div>
+          </div>
+          <div class="menu-item" onclick="openProfile()">
+            <span>👤</span> My Profile
+          </div>
+          <!-- Requested: Account Icon Analysis -->
+          <div class="menu-item" onclick="openAnalysis()">
+            <span>📈</span> Account Analysis
+          </div>
+          <div class="menu-item" onclick="openSettings()">
+            <span>⚙️</span> Settings
+          </div>
+          <a href="user_dashboard.html" class="menu-item">
+            <span>📊</span> Full Dashboard
+          </a>
+          <div class="menu-item danger" id="btnLogout">
+            <span>🚪</span> Sign Out
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="hero-container">
+    <div class="report-widget">
+      <div class="widget-header">
+        <h1 class="widget-title">File a Grievance</h1>
+        <div class="widget-sub">Describe your issue. Our AI will analyze and route it instantly.</div>
+      </div>
+
+      <div class="widget-body">
+
+        <div class="input-group">
+          <label class="input-label">Issue Subject</label>
+          <input type="text" id="title" placeholder="e.g. Broken streetlight on Main St" />
+          <button class="magic-btn" id="btnAIDraft">
+            <span>✨</span> AI Draft
+          </button>
+        </div>
+
+        <div class="input-group">
+          <label class="input-label">Location</label>
+          <input type="text" id="address" placeholder="Fetching location..." />
+          <div id="locPill" class="loc-pill" style="display:none;">📍 Coordinates Detected</div>
+        </div>
+
+        <div class="input-group">
+          <label class="input-label">Detailed Description</label>
+          <textarea id="description" rows="5" placeholder="Provide more details about the incident..."></textarea>
+        </div>
+
+        <div id="aiBox" class="ai-box">
+          <div style="font-size:11px; font-weight:700; color:#0369a1; text-transform:uppercase; margin-bottom:8px;">
+            Artificial Intelligence Analysis</div>
+          <div class="ai-row">
+            <span class="ai-tag" id="aiCat">Cat: -</span>
+            <span class="ai-tag" id="aiPri">Pri: -</span>
+            <span class="ai-tag" id="aiConf">Conf: -</span>
+          </div>
+          <div style="font-size:13px; color:#334155; line-height:1.4;" id="aiSum"></div>
+        </div>
+
+        <button id="btnSubmit" class="btn-submit">Submit Report</button>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Profile Modal -->
+  <div class="modal-overlay" id="profileModal">
+    <div class="modal-card">
+      <button class="close-btn" onclick="closeModals()">×</button>
+      <div class="modal-title">My Profile</div>
+      <div class="profile-row">
+        <div class="profile-label">Full Name</div>
+        <div class="profile-val" id="p-name">-</div>
+      </div>
+      <div class="profile-row">
+        <div class="profile-label">User ID</div>
+        <div class="profile-val" id="p-id">-</div>
+      </div>
+      <div class="profile-row">
+        <div class="profile-label">Phone Number</div>
+        <div class="profile-val" id="p-phone">-</div>
+      </div>
+      <div class="profile-row">
+        <div class="profile-label">Email Address</div>
+        <div class="profile-val" id="p-email">-</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Analysis Modal -->
+  <div class="modal-overlay" id="analysisModal">
+    <div class="modal-card">
+      <button class="close-btn" onclick="closeModals()">×</button>
+      <div class="modal-title">Account Analysis</div>
+      <div style="text-align:center; margin-bottom:20px; color:var(--text-sub); font-size:14px;">
+        Overview of your reported grievances
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-val" id="s-total">0</div>
+          <div class="stat-label">Total</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="s-pending" style="color:#f59e0b">0</div>
+          <div class="stat-label">Pending</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="s-solved" style="color:#16a34a">0</div>
+          <div class="stat-label">Resolved</div>
+        </div>
+      </div>
+      <div style="margin-top:24px; text-align:center;">
+        <a href="user_dashboard.html"
+          style="color:var(--gov-blue-primary); font-weight:700; font-size:14px; text-decoration:none;">View Full
+          Dashboard →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div class="modal-overlay" id="settingsModal">
+    <div class="modal-card">
+      <button class="close-btn" onclick="closeModals()">×</button>
+      <div class="modal-title">System Settings</div>
+
+      <div class="setting-row">
+        <div style="font-weight:600; font-size:15px;">Dark Mode</div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="darkModeToggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div style="font-size:13px; color:var(--text-sub); margin-top:8px;">
+        Toggle theme appearance for better visibility in low light conditions.
+      </div>
+    </div>
+  </div>
+
+  <div id="toastContainer"></div>
+
+  <script>
+    const API = "http://127.0.0.1:8000";
+    const token = localStorage.getItem("USER_TOKEN");
+    let lat = null, lng = null;
+    let currentUser = null;
+
+    if (!token) window.location.href = "user_login.html";
+
+    // --- Data Fetching ---
+    async function initUser() {
+      try {
+        // 1. Fetch Profile
+        const res = await fetch(`${API}/auth/me`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error("Auth failed");
+        currentUser = await res.json();
+
+        // Update UI
+        document.getElementById("menuUserName").innerText = currentUser.full_name;
+        document.getElementById("userInitials").innerText = currentUser.full_name.charAt(0).toUpperCase();
+
+        // Populate Modal
+        document.getElementById("p-name").innerText = currentUser.full_name;
+        document.getElementById("p-id").innerText = `#${currentUser.id}`; // User ID
+        document.getElementById("p-phone").innerText = currentUser.phone;
+        document.getElementById("p-email").innerText = currentUser.email || "Not Linked";
+
+        // 2. Fetch Stats for Analysis
+        const complaintsRes = await fetch(`${API}/api/v1/complaints/my`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        const complaints = await complaintsRes.json();
+
+        const total = complaints.length;
+        const resolved = complaints.filter(c => c.status === "Resolved").length;
+        const pending = total - resolved;
+
+        document.getElementById("s-total").innerText = total;
+        document.getElementById("s-pending").innerText = pending;
+        document.getElementById("s-solved").innerText = resolved;
+
+      } catch (e) {
+        console.error(e);
+        // In a real app we might redirect to login, but for dev we settle.
+      }
+    }
+
+    // --- Modal Logic ---
+    function toggleMenu() {
+      document.getElementById("userMenu").classList.toggle("active");
+    }
+
+    document.addEventListener("click", function (e) {
+      if (!e.target.closest(".user-menu-container")) {
+        document.getElementById("userMenu").classList.remove("active");
+      }
+    });
+
+    function closeModals() {
+      document.querySelectorAll('.modal-overlay').forEach(el => el.classList.remove('active'));
+    }
+
+    function openProfile() { closeModals(); document.getElementById("profileModal").classList.add("active"); }
+    function openAnalysis() { closeModals(); document.getElementById("analysisModal").classList.add("active"); }
+    function openSettings() { closeModals(); document.getElementById("settingsModal").classList.add("active"); }
+
+    // --- Dark Mode ---
+    const savedTheme = localStorage.getItem("theme");
+    const toggle = document.getElementById("darkModeToggle");
+
+    if (savedTheme === "dark") {
+      document.body.classList.add("dark-mode");
+      toggle.checked = true;
+    }
+
+    toggle.addEventListener("change", (e) => {
+      if (e.target.checked) {
+        document.body.classList.add("dark-mode");
+        localStorage.setItem("theme", "dark");
+      } else {
+        document.body.classList.remove("dark-mode");
+        localStorage.setItem("theme", "light");
+      }
+    });
+
+
+    // --- Core Logic ---
+    window.addEventListener("load", () => {
+      initUser(); // Load User Data
+
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          async (pos) => {
+            lat = pos.coords.latitude;
+            lng = pos.coords.longitude;
+            document.getElementById("locPill").style.display = "inline-flex";
+            try {
+              const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);
+              const d = await r.json();
+              if (d.display_name) document.getElementById("address").value = d.display_name;
+            } catch (e) { }
+          },
+          (err) => { console.warn("Loc denied"); }
+        );
+      }
+    });
+
+    document.getElementById("btnAIDraft").addEventListener("click", async () => {
+      const title = document.getElementById("title").value;
+      const addr = document.getElementById("address").value;
+      if (title.length < 3) return showToast("Please enter a subject first", "warn");
+
+      const btn = document.getElementById("btnAIDraft");
+      btn.innerHTML = "⏳ Generating...";
+
+      try {
+        const res = await fetch(`${API}/api/v1/ai/draft`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          body: JSON.stringify({ title, address: addr })
+        });
+        const data = await res.json();
+        document.getElementById("description").value = data.generated_description;
+        showAI(data.ai);
+        showToast("AI Draft Generated!", "success");
+      } catch (e) { showToast("AI Failed", "err"); }
+      finally { btn.innerHTML = "✨ AI Draft"; }
+    });
+
+    document.getElementById("btnSubmit").addEventListener("click", async () => {
+      const title = document.getElementById("title").value;
+      let desc = document.getElementById("description").value;
+      const address = document.getElementById("address").value;
+
+      if (!title || title.length < 3) return showToast("Subject required", "err");
+
+      const btn = document.getElementById("btnSubmit");
+      btn.innerText = "Submitting...";
+      btn.disabled = true;
+
+      try {
+        if (!desc) {
+          const draftRes = await fetch(`${API}/api/v1/ai/draft`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+            body: JSON.stringify({ title, address })
+          });
+          const draft = await draftRes.json();
+          desc = draft.generated_description;
+          document.getElementById("description").value = desc;
+        }
+
+        const res = await fetch(`${API}/api/v1/complaints`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          body: JSON.stringify({ title, description: desc, address, latitude: lat, longitude: lng })
+        });
+
+        if (res.ok) {
+          showToast("Report Submitted Successfully!", "success");
+          setTimeout(() => window.location.href = "user_dashboard.html", 1500);
+        } else { throw new Error("Failed"); }
+      } catch (e) {
+        showToast("Submission Failed", "err");
+        btn.innerText = "Submit Report";
+        btn.disabled = false;
+      }
+    });
+
+    document.getElementById("btnLogout").addEventListener("click", () => {
+      localStorage.removeItem("USER_TOKEN");
+      window.location.href = "user_login.html";
+    });
+
+    function showAI(ai) {
+      document.getElementById("aiBox").style.display = "block";
+      document.getElementById("aiCat").innerText = `Cat: ${ai.ai_category}`;
+      document.getElementById("aiPri").innerText = `Pri: ${ai.ai_priority}`;
+      document.getElementById("aiConf").innerText = `Conf: ${Math.round(ai.ai_confidence * 100)}%`;
+      document.getElementById("aiSum").innerText = ai.ai_summary;
+    }
+
+    function showToast(msg, type) {
+      const t = document.createElement("div");
+      t.style.cssText = `background:#1e293b; color:white; padding:12px 24px; border-radius:8px; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1); margin-top:10px; font-size:14px; animation:fadeIn 0.3s;`;
+      if (type === "err") t.style.background = "#b91c1c";
+      if (type === "success") t.style.background = "#15803d";
+      if (type === "warn") t.style.background = "#eab308";
+      t.innerText = msg;
+      document.getElementById("toastContainer").appendChild(t);
+      setTimeout(() => t.remove(), 3000);
+    }
+  </script>
+
+</body>
+
+</html>
