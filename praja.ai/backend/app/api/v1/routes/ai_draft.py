@@ -5,7 +5,7 @@ from datetime import datetime
 from app.auth.dependencies import get_current_user
 from app.ai.pipeline import enrich
 
-router = APIRouter(prefix="/api/v1/ai", tags=["ai"])
+router = APIRouter(prefix="/ai", tags=["ai"])
 
 class DraftRequest(BaseModel):
     title: str = Field(..., min_length=3, max_length=160)

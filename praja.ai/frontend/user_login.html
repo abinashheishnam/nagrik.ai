@@ -11,7 +11,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
         rel="stylesheet">
-
+    <link rel="stylesheet" href="style.css">
     <style>
         :root {
             /* Gov Palette */
@@ -41,21 +41,58 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            background-image: radial-gradient(circle at 50% 0%, #eff6ff 0%, transparent 40%);
+            /* Loktak Background */
+            background: url("assets/loktak_background.png") no-repeat center center/cover fixed;
+        }
+
+        /* Dark overlay for readability */
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.4);
+            /* Dark overlay */
+            z-index: -1;
         }
 
         /* --- Global Header --- */
         .gov-header {
-            background: #ffffff;
-            height: 70px;
+            background: rgba(255, 255, 255, 0.7);
+            /* More transparent for better theme blending */
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            height: 90px;
+            /* Larger */
             display: flex;
             align-items: center;
-            justify-content: center;
-            /* Centered for login page */
-            padding: 0 32px;
-            border-bottom: 1px solid var(--border);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+            justify-content: space-between;
+            /* Content Left & Right */
+            padding: 0 40px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.05);
             z-index: 50;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .header-link {
+            text-decoration: none;
+            color: var(--gov-blue-primary);
+            font-weight: 600;
+            font-size: 14px;
+            transition: 0.2s;
+        }
+
+        .header-link:hover {
+            opacity: 0.8;
+            text-decoration: underline;
         }
 
         .brand-section {
@@ -92,24 +129,32 @@
             margin-top: 2px;
         }
 
-        /* --- Login Card --- */
+        /* --- Login Card (Glassmorphism) --- */
         .main-stage {
             flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
+            position: relative;
+            /* Context for z-index */
+            z-index: 10;
         }
 
         .login-card {
-            background: #ffffff;
+            background: rgba(255, 255, 255, 0.85);
+            /* Glassy white */
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             width: 100%;
             max-width: 420px;
             padding: 40px;
-            border-radius: 16px;
-            border: 1px solid var(--border);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
-            animation: slideUp 0.4s ease-out;
+            border-radius: 20px;
+            /* Softer corners */
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            /* Smooth swiping entrance from right */
+            animation: slideInRight 0.8s cubic-bezier(0.22, 1, 0.36, 1);
         }
 
         .tabs {
@@ -253,15 +298,16 @@
             border: 1px solid #bbf7d0;
         }
 
-        @keyframes slideUp {
-            from {
+        @keyframes slideInRight {
+            0% {
                 opacity: 0;
-                transform: translateY(20px);
+                transform: translateX(100px);
+                /* Start from right offset */
             }
 
-            to {
+            100% {
                 opacity: 1;
-                transform: translateY(0);
+                transform: translateX(0);
             }
         }
 
@@ -287,12 +333,15 @@
                 <div class="brand-subtitle">Government of Manipur</div>
             </div>
         </div>
+        <div class="header-right">
+            <a href="#" class="header-link">Help Desk</a>
+            <a href="#" class="header-link">Emergency Contacts</a>
+        </div>
     </header>
 
     <div class="main-stage">
-        <div class="login-card">
-
-            <div class="tabs">
+        <div class="login-card slide-in-right">
+            <div class="brand-header">
                 <div class="tab active" onclick="setRole('citizen')">Citizen</div>
                 <div class="tab" onclick="setRole('admin')">Official</div>
             </div>
@@ -314,6 +363,13 @@
 
                 <label>Password</label>
                 <input id="c-pass" type="password" placeholder="••••••••" />
+
+                <div style="display:flex; align-items:center; margin-bottom:16px;">
+                    <input type="checkbox" id="c-remember" style="width:auto; margin-bottom:0; margin-right:8px;">
+                    <label for="c-remember"
+                        style="display:inline; margin-bottom:0; font-size:13px; text-transform:none; font-weight:500; color:var(--text-sub);">Remember
+                        me on this device</label>
+                </div>
 
                 <button class="btn" id="c-btn" onclick="handleCitizen()">Secure Login</button>
 
@@ -431,8 +487,16 @@
 
                 if (!res.ok) throw new Error(data.detail || "Authentication failed");
 
-                localStorage.setItem("USER_TOKEN", data.access_token);
-                localStorage.setItem("ROLE", "user");
+                const remember = document.getElementById('c-remember').checked;
+                const storage = remember ? localStorage : sessionStorage;
+
+                storage.setItem("USER_TOKEN", data.access_token);
+                storage.setItem("ROLE", "user");
+
+                // Clear the other storage just in case
+                (remember ? sessionStorage : localStorage).removeItem("USER_TOKEN");
+                (remember ? sessionStorage : localStorage).removeItem("ROLE");
+
                 showMsg("Authentication Successful. Redirecting...", "ok");
                 setTimeout(() => window.location.href = "index.html", 1000);
 
@@ -469,7 +533,7 @@
                 if (!res.ok) throw new Error(data.detail || "Access Denied");
 
                 localStorage.setItem("ADMIN_TOKEN", data.access_token);
-                localStorage.setItem("ROLE", "admin");
+                localStorage.setItem("ROLE", "ADMIN");
                 showMsg("Identity Verified. Loading Dashboard...", "ok");
                 setTimeout(() => window.location.href = "admin.html", 1000);
 
@@ -479,7 +543,82 @@
                 btn.disabled = false;
             }
         }
+
+        // -- Enter Key Support --
+        function attachEnterKey(ids, fn) {
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener("keypress", function (e) {
+                        if (e.key === "Enter") {
+                            e.preventDefault();
+                            fn();
+                        }
+                    });
+                }
+            });
+        }
+
+        // Citizen Inputs
+        attachEnterKey(['c-name', 'c-email', 'c-phone', 'c-pass'], handleCitizen);
+
+        // Admin Inputs
+        attachEnterKey(['a-user', 'a-pass', 'a-secret'], handleAdmin);
     </script>
+
+    <!-- Official Footer (Premium) -->
+    <footer class="gov-footer-premium">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-block">
+                    <h4>Government of Manipur</h4>
+                    <ul>
+                        <li><a href="#">Chief Minister's Office</a></li>
+                        <li><a href="#">Finance Department</a></li>
+                        <li><a href="#">Public Works Department</a></li>
+                        <li><a href="#">Manipur Police</a></li>
+                    </ul>
+                </div>
+                <div class="footer-block">
+                    <h4>Manipur Grievance Portal</h4>
+                    <ul>
+                        <li><a href="#">About the Platform</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Accessibility Statement</a></li>
+                    </ul>
+                </div>
+                <div class="footer-block">
+                    <h4>Help & Support</h4>
+                    <ul>
+                        <li><a href="#">FAQ / Knowledge Base</a></li>
+                        <li><a href="#">Track Grievance</a></li>
+                        <li><a href="#">Feedback</a></li>
+                        <li><a href="#">Sitemap</a></li>
+                    </ul>
+                </div>
+                <div class="footer-block">
+                    <h4>Contact Us</h4>
+                    <p style="font-size:14px; color:#cbd5e1; line-height:1.6; margin-bottom:12px;">
+                        Room 101, New Secretariat,<br>
+                        Imphal, Manipur - 795001<br>
+                        <strong>Toll Free:</strong> 1800-MAN-HELP
+                    </p>
+                    <div class="social-icons">
+                        <a href="#">F</a>
+                        <a href="#">X</a>
+                        <a href="#">I</a>
+                        <a href="#">Y</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-bottom-bar">
+                <div>&copy; 2025 Praja.ai &mdash; Government of Manipur. All Rights Reserved.</div>
+                <div>Designed & Developed by SaiyoniX Pvt.ltd</div>
+            </div>
+        </div>
+    </footer>
 </body>
 
 </html>

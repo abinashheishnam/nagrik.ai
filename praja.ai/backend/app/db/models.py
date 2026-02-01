@@ -26,7 +26,9 @@ class Admin(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     username: Mapped[str] = mapped_column(String(80), unique=True, index=True)
     password_hash: Mapped[str] = mapped_column(String(255))
+    role: Mapped[str] = mapped_column(String(20), default="OFFICER")  # ✅ ADD THIS
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
 
 
 class Complaint(Base):
@@ -72,6 +74,9 @@ class Complaint(Base):
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
+    # Read Receipt
+    is_viewed_by_admin: Mapped[bool] = mapped_column(Integer, default=False) # Helper: Using Integer for boolean compatibility if needed, but SQLAlchemy Bool is fine. Sticking to mapped_column defaults.
+
     user = relationship("User", back_populates="complaints")
 
 
@@ -100,3 +105,63 @@ class WhatsAppSession(Base):
     longitude: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
 
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+from sqlalchemy import Column, Integer, String, DateTime, Text, ForeignKey
+from sqlalchemy.dialects.mysql import JSON
+from sqlalchemy.sql import func
+
+
+class ComplaintStatusHistory(Base):
+    __tablename__ = "complaint_status_history"
+
+    id = Column(Integer, primary_key=True, index=True)
+    complaint_id = Column(Integer, ForeignKey("complaints.id", ondelete="CASCADE"), nullable=False, index=True)
+    status = Column(String(30), nullable=False)
+    note = Column(Text, nullable=True)
+
+    changed_by_admin_id = Column(Integer, ForeignKey("admins.id", ondelete="SET NULL"), nullable=True)
+    changed_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+
+    created_at = Column(DateTime, nullable=False, server_default=func.now(), index=True)
+
+
+class ComplaintAssignment(Base):
+    __tablename__ = "complaint_assignments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    complaint_id = Column(Integer, ForeignKey("complaints.id", ondelete="CASCADE"), nullable=False, index=True)
+
+    department = Column(String(80), nullable=False, index=True)
+    assigned_to_admin_id = Column(Integer, ForeignKey("admins.id", ondelete="SET NULL"), nullable=True)
+
+    due_at = Column(DateTime, nullable=True, index=True)
+    note = Column(Text, nullable=True)
+
+    created_at = Column(DateTime, nullable=False, server_default=func.now())
+
+
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    actor_type = Column(String(10), nullable=False)   # 'admin' or 'user'
+    actor_id = Column(Integer, nullable=False)
+
+    action = Column(String(60), nullable=False)
+    entity_type = Column(String(30), nullable=False)
+    entity_id = Column(Integer, nullable=False)
+
+    meta = Column(JSON, nullable=True)
+    ip = Column(String(45), nullable=True)
+    user_agent = Column(String(255), nullable=True)
+
+    created_at = Column(DateTime, nullable=False, server_default=func.now(), index=True)
+from app.db.social_models import SocialSource, ExtractedSignals, AIInferenceRun  # noqa: F401
+
+# Load evidence models
+from app.db.evidence_models import ComplaintEvidence  # noqa: F401
+
+# Load evidence models
+from app.db.evidence_models import ComplaintEvidence  # noqa: F401

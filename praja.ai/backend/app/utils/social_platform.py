@@ -1,0 +1,18 @@
+from urllib.parse import urlparse
+
+def detect_platform(url: str) -> str:
+    host = (urlparse(url).netloc or "").lower()
+    if host.startswith("www."):
+        host = host[4:]
+
+    if "youtube.com" in host or "youtu.be" in host:
+        return "youtube"
+    if "x.com" in host or "twitter.com" in host:
+        return "x"
+    if "instagram.com" in host:
+        return "instagram"
+    if "facebook.com" in host or "fb.watch" in host:
+        return "facebook"
+
+    # everything else is treated as normal web article/page
+    return "web"

@@ -1,0 +1,126 @@
+{
+  "version": "v2",
+  "language_support": ["en", "hi", "bn", "as", "mni"],
+  "categories": [
+    {
+      "id": "emergency_disaster",
+      "name": "Emergency & Disaster",
+      "examples": [
+        "fire accident in building, person unconscious needs ambulance, flood rescue needed, gas leak reported, building collapse, violence happening now"
+      ],
+      "keywords_hint": [
+        "emergency",
+        "fire",
+        "ambulance",
+        "flood",
+        "rescue",
+        "collapse",
+        "gas leak",
+        "accident",
+        "unconscious",
+        "injured",
+        "disaster",
+        "violence",
+        "help now"
+      ],
+      "default_priority": "Critical"
+    },
+    {
+      "id": "roads_transport",
+      "name": "Roads & Transport",
+      "examples": [
+        "potholes, broken roads, traffic lights not working, bus issues, road accidents due to bad roads"
+      ],
+      "keywords_hint": ["road", "pothole", "bridge", "traffic", "bus", "accident", "signal"]
+    },
+    {
+      "id": "water_supply",
+      "name": "Water Supply",
+      "examples": [
+        "no water supply, dirty water, low pressure, pipeline leakage, water tanker not coming"
+      ],
+      "keywords_hint": ["water", "pipeline", "leak", "tanker", "pressure", "dirty water"]
+    },
+    {
+      "id": "electricity",
+      "name": "Electricity",
+      "examples": [
+        "power cuts, transformer failure, voltage fluctuation, street lights off"
+      ],
+      "keywords_hint": ["power", "electricity", "transformer", "voltage", "street light", "outage"]
+    },
+    {
+      "id": "sanitation_waste",
+      "name": "Sanitation & Waste",
+      "examples": [
+        "garbage not collected, dumping, bad smell, waste burning"
+      ],
+      "keywords_hint": ["garbage", "waste", "dump", "trash", "sanitation", "smell"]
+    },
+    {
+      "id": "drainage_flooding",
+      "name": "Drainage & Flooding",
+      "examples": [
+        "blocked drains, waterlogging, flooding after rain, sewage overflow"
+      ],
+      "keywords_hint": ["drain", "flood", "waterlogging", "sewage", "overflow", "rain"]
+    },
+    {
+      "id": "healthcare",
+      "name": "Healthcare",
+      "examples": [
+        "hospital services, ambulance delay, medicine shortage, rude staff"
+      ],
+      "keywords_hint": ["hospital", "doctor", "medicine", "ambulance", "clinic", "health"]
+    },
+    {
+      "id": "education",
+      "name": "Education",
+      "examples": [
+        "school issues, teacher absence, facilities, exam problems"
+      ],
+      "keywords_hint": ["school", "college", "teacher", "exam", "class", "education"]
+    },
+    {
+      "id": "public_safety_law",
+      "name": "Public Safety & Law",
+      "examples": [
+        "theft, harassment, violence, illegal activities, police response delay"
+      ],
+      "keywords_hint": ["police", "theft", "harassment", "violence", "unsafe", "crime"]
+    },
+    {
+      "id": "government_services",
+      "name": "Government Services",
+      "examples": [
+        "documents, certificates, delays in service, office staff issues"
+      ],
+      "keywords_hint": ["certificate", "document", "office", "service", "delay", "application"]
+    },
+    {
+      "id": "environment",
+      "name": "Environment",
+      "examples": [
+        "pollution, illegal cutting, lake/river issues, forest damage"
+      ],
+      "keywords_hint": ["pollution", "smoke", "tree", "forest", "river", "lake", "environment"]
+    },
+    {
+      "id": "housing_land",
+      "name": "Housing & Land",
+      "examples": [
+        "land disputes, housing scheme issues, encroachment"
+      ],
+      "keywords_hint": ["land", "plot", "encroachment", "housing", "property", "dispute"]
+    },
+    {
+      "id": "other",
+      "name": "Other",
+      "examples": [
+        "anything that doesn't match above categories"
+      ],
+      "keywords_hint": []
+    }
+  ],
+  "priority_labels": ["Low", "Medium", "High", "Critical"]
+}

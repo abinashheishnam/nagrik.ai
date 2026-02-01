@@ -1,0 +1,78 @@
+import re
+from urllib.parse import urlparse, parse_qs
+import requests
+
+from youtube_transcript_api import YouTubeTranscriptApi
+
+
+def extract_video_id(url: str) -> str | None:
+    u = urlparse(url)
+    host = (u.netloc or "").lower()
+
+    if "youtu.be" in host:
+        vid = u.path.strip("/").split("/")[0]
+        return vid or None
+
+    if "youtube.com" in host:
+        if u.path.startswith("/watch"):
+            qs = parse_qs(u.query)
+            return (qs.get("v", [None])[0]) or None
+
+        m = re.match(r"^/(shorts|embed)/([^/?#]+)", u.path)
+        if m:
+            return m.group(2)
+
+    return None
+
+
+def oembed(url: str) -> dict:
+    r = requests.get(
+        "https://www.youtube.com/oembed",
+        params={"url": url, "format": "json"},
+        timeout=20,
+    )
+    r.raise_for_status()
+    return r.json()
+
+
+def fetch_transcript(video_id: str) -> tuple[str | None, dict]:
+    meta = {"video_id": video_id}
+    try:
+        items = YouTubeTranscriptApi.get_transcript(video_id, languages=["hi", "en"])
+        text = " ".join([x.get("text", "") for x in items if x.get("text")]).strip()
+        meta["status"] = "ok"
+        meta["lang_hint"] = "hi/en"
+        return (text or None), meta
+    except Exception as e:
+        meta["status"] = "unavailable"
+        meta["error"] = str(e)
+        return None, meta
+
+
+def extract(url: str) -> dict:
+    # ✅ Validate FIRST (no external calls on junk URLs)
+    vid = extract_video_id(url)
+
+    # YouTube ids are usually 11 chars, but allow a tolerant range
+    if not vid or not re.fullmatch(r"[A-Za-z0-9_-]{11}", vid):
+        raise ValueError(f"invalid_youtube_url: could not extract valid video id from url={url}")
+
+    canonical_url = f"https://www.youtube.com/watch?v={vid}"
+
+    # ✅ Call oEmbed using canonical URL (more reliable)
+    data = oembed(canonical_url)
+
+    transcript, tmeta = fetch_transcript(vid)
+
+    return {
+        "platform": "youtube",
+        "platform_id": vid,
+        "canonical_url": canonical_url,
+        "title": data.get("title", "") or "",
+        "author_name": data.get("author_name", "") or "",
+        "author_url": data.get("author_url", "") or "",
+        "thumbnail_url": data.get("thumbnail_url", "") or "",
+        "transcript": transcript,
+        "transcript_meta": tmeta,
+        "raw_oembed": data,
+    }

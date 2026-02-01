@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Media Intake | Praja.ai</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Premium Social Intake Styles */
+        body {
+            background: url('assets/social_bg.png') no-repeat center center fixed;
+            background-size: cover;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            overflow-x: hidden;
+        }
+
+        :root {
+            --gov-blue-dark: #0f172a;
+            --gov-blue-primary: #1e3a8a;
+            --gov-blue-accent: #3b82f6;
+            --gov-gold: #b45309;
+            --gov-bg: #f8fafc;
+            --surface: #ffffff;
+            --border: #e2e8f0;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --ok: #16a34a;
+            --warn: #f59e0b;
+            --err: #dc2626;
+        }
+
+        /* Essential Reset for layout sizing */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+        /* Ensure text is visible in all containers */
+        body,
+        .social-container,
+        .intake-card,
+        .result-box,
+        table,
+        th,
+        td {
+            color: var(--text-main);
+        }
+
+        .result-label {
+            font-weight: 700;
+            color: var(--gov-blue-dark);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        .result-content {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #1e293b;
+            /* Fallback absolute color */
+        }
+
+        pre {
+            background: #f1f5f9;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            color: #334155;
+            font-size: 12px;
+            overflow-x: auto;
+        }
+
+        /* Glassmorphism Container */
+        .social-container {
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .main-stage {
+            flex: 1;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            padding: 0 20px;
+        }
+
+        .page-title {
+            text-align: center;
+            font-size: 28px;
+            color: var(--gov-blue-dark);
+            margin-bottom: 8px;
+            font-weight: 800;
+            font-family: 'Merriweather', serif;
+        }
+
+        .page-subtitle {
+            text-align: center;
+            color: var(--text-sub);
+            margin-bottom: 32px;
+            font-size: 14px;
+        }
+
+        .intake-card {
+            background: transparent;
+            border: none;
+            padding: 0;
+            margin-bottom: 0;
+            box-shadow: none;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Modern Input Fields */
+        .input-group {
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--gov-blue-primary);
+            letter-spacing: 0.05em;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 16px 20px;
+            border-radius: 12px;
+            border: 2px solid rgba(226, 232, 240, 0.8);
+            background: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+            color: var(--text-main);
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            border-color: var(--gov-blue-accent);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+            outline: none;
+            background: #fff;
+        }
+
+        /* Beautiful Button */
+        .btn-submit {
+            width: 100%;
+            padding: 18px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--gov-blue-primary), var(--gov-blue-accent));
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 10px 15px -3px rgba(30, 58, 138, 0.2);
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgba(30, 58, 138, 0.3);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Results Styles */
+        .result-section {
+            display: none;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            animation: slideUp 0.5s ease-out;
+        }
+
+        .result-box {
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(4px);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Status Badge Override */
+        .status-badge {
+            padding: 6px 16px;
+            font-size: 13px;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* --- New Professional Header Styles --- */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .gov-top-bar {
+            background: #0f172a;
+            color: #f1f5f9;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            padding: 8px 0;
+            letter-spacing: 0.05em;
+        }
+
+        .gov-top-bar a,
+        .gov-top-bar span {
+            color: #f1f5f9;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .gov-top-bar a:hover {
+            color: var(--gov-blue-accent);
+        }
+
+        .lang-select {
+            background: #1e293b;
+            color: white;
+            border: none;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        .gov-header-main {
+            background: #ffffff;
+            padding: 20px 0;
+            border-bottom: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .gov-navbar {
+            background: #1e3a8a;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .gov-navbar .container {
+            display: flex;
+            gap: 2px;
+        }
+
+        .gov-navbar a {
+            display: block;
+            color: white;
+            text-decoration: none;
+            padding: 16px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .gov-navbar a:hover,
+        .gov-navbar a.active {
+            background: #1e40af;
+        }
+
+
+
+        /* =========================
+   OFFICIAL GOV HEADER ALIGN
+   (No body changes)
+========================= */
+
+        .gov-header-wrap {
+            width: 100%;
+            position: relative;
+            z-index: 120;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Top strip */
+        .gov-top-strip {
+            background: #0f172a;
+            color: #e2e8f0;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+        }
+
+        .gov-top-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+        }
+
+        .gov-top-right a {
+            color: #e2e8f0;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 12px;
+        }
+
+        .gov-top-right a:hover {
+            color: var(--gov-blue-accent);
+        }
+
+        .gov-top-right .sep {
+            margin: 0 10px;
+            color: #475569;
+        }
+
+        /* Main header row */
+        .gov-main-header {
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
+        }
+
+        .gov-main-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+        }
+
+        .gov-brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .gov-emblem {
+            width: 44px;
+            height: 44px;
+            object-fit: contain;
+        }
+
+        .gov-brand-title {
+            font-family: "Merriweather", serif;
+            font-size: 20px;
+            font-weight: 900;
+            color: #0f172a;
+            line-height: 1.1;
+        }
+
+        .gov-brand-subtitle {
+            font-size: 12px;
+            font-weight: 700;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-top: 4px;
+        }
+
+        /* Keep your existing dropdown + avatar, just align it */
+        .gov-actions {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        /* Fix avatar sizing for official look */
+        .avatar-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            border: 1px solid rgba(15, 23, 42, 0.12);
+            background: #f8fafc;
+            color: #0f172a;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        .avatar-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px rgba(15, 23, 42, 0.10);
+        }
+
+        /* Dropdown positioning stability */
+        .user-menu-container {
+            position: relative;
+        }
+
+        .avatar-btn {
+            padding-right: 4px;
+            /* Space for hidden element if needed */
+        }
+
+        /* Dropdown Menu Styles (Ported from Index) */
+        .dropdown-menu {
+            position: absolute;
+            top: 50px;
+            right: 0;
+            width: 240px;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 1000;
+            animation: fadeIn 0.15s ease-out;
+        }
+
+        .dropdown-menu.active {
+            display: flex;
+        }
+
+        .menu-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            background: #f8fafc;
+        }
+
+        .user-name-disp {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--gov-blue-dark);
+        }
+
+        .user-role-disp {
+            font-size: 11px;
+            color: var(--text-sub);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .menu-item {
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-main);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .menu-item:hover {
+            background: #eff6ff;
+            color: var(--gov-blue-primary);
+        }
+
+        .menu-item.danger {
+            color: #dc2626;
+            border-top: 1px solid var(--border);
+        }
+
+        .menu-item.danger:hover {
+            background: #fef2f2;
+        }
+
+        /* Ensure footer container matches header container */
+        .gov-footer-premium .container {
+            max-width: 1200px;
+            padding: 0 20px;
+        }
+
+        /* Footer bottom bar alignment fix */
+        .footer-bottom-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        /* Mobile polish */
+        @media (max-width: 720px) {
+            .gov-top-inner {
+                flex-direction: column;
+                gap: 6px;
+                align-items: flex-start;
+            }
+
+            .gov-main-inner {
+                flex-direction: column;
+                gap: 14px;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header (Same as Admin/Dashboard for consistency) -->
+    <!-- Header (Same as Admin/Dashboard for consistency) -->
+
+    <!-- Header -->
+    <!-- Official Gov Header (Aligned) -->
+    <header class="gov-header-wrap">
+        <!-- Top strip -->
+        <div class="gov-top-strip">
+            <div class="container gov-top-inner">
+                <div class="gov-top-left">
+                    Government of Manipur • Citizen Reporting Portal
+                </div>
+                <div class="gov-top-right" style="display:none;">
+                    <!-- Hidden as requested, features moved to dropdown -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Main header row -->
+        <div class="gov-main-header">
+            <div class="container gov-main-inner">
+                <div class="gov-brand">
+                    <img src="assets/manipur_emblem.png" alt="Emblem" class="gov-emblem">
+                    <div class="gov-brand-text">
+                        <div class="gov-brand-title">Manipur Grievance Portal</div>
+                        <div class="gov-brand-subtitle">Government of Manipur</div>
+                    </div>
+                </div>
+
+                <div class="gov-actions">
+                    <div class="user-menu-container">
+                        <div class="avatar-btn" onclick="toggleMenu()" id="userAvatar"
+                            style="width:auto; padding:0 12px; gap:8px; border-radius:24px;">
+                            <span>U</span>
+                            <span style="font-size:10px; opacity:0.6;">▼</span>
+                        </div>
+                        <div class="dropdown-menu" id="userMenu">
+                            <div class="menu-header">
+                                <div class="user-name-disp" id="menuUserName">User</div>
+                                <div class="user-role-disp">Citizen</div>
+                            </div>
+
+                            <div class="menu-item" onclick="window.location.href='index.html'">
+                                <span>🏠</span> Home
+                            </div>
+                            <div class="menu-item" onclick="window.location.href='user_dashboard.html'">
+                                <span>📊</span> Dashboard
+                            </div>
+                            <div class="menu-item" onclick="alert('Departments feature coming soon!')">
+                                <span>🏛️</span> Departments
+                            </div>
+                            <div class="menu-item" onclick="alert('Analytics feature coming soon!')">
+                                <span>📈</span> Analytics
+                            </div>
+                            <div class="menu-item" onclick="location.reload()"
+                                style="background:#f0fdf4; color:#15803d;">
+                                <span>✨</span> Social Intake
+                            </div>
+                            <div class="menu-item" onclick="alert('Contact support: 1800-MAN-HELP')">
+                                <span>📞</span> Help Center
+                            </div>
+                            <div class="menu-item danger" id="btnLogout">
+                                <span>🚪</span> Sign Out
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+    </header>
+
+    <!-- Navigation Removed for Compactness -->
+
+    <div class="main-stage">
+        <div class="social-container">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <h1 class="page-title" style="margin-bottom: 8px;">Social Media Intake</h1>
+                <div class="page-subtitle">Analyze grievances reported via YouTube, X, or Facebook instantly.</div>
+            </div>
+
+            <!-- Intake Form -->
+            <div class="intake-card">
+                <form id="socialForm">
+                    <div class="input-group">
+                        <label class="input-label">Social Media URL</label>
+                        <div style="position:relative;">
+                            <span style="position:absolute; left:16px; top:16px; color:var(--text-sub);">🔗</span>
+                            <input type="text" id="socialUrl"
+                                placeholder="https://youtube.com/watch?v=... or https://x.com/..." required
+                                style="padding-left: 48px;">
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label class="input-label">Note (Optional)</label>
+                        <div style="position:relative;">
+                            <span style="position:absolute; left:16px; top:16px; color:var(--text-sub);">📝</span>
+                            <textarea id="socialNote" rows="2" placeholder="Any additional context..."
+                                style="padding-left: 48px;"></textarea>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; gap:10px; margin-top:20px;">
+                        <button type="submit" class="btn-submit" id="submitBtn" style="flex:2;">
+                            <span id="btnIcon">✨</span>
+                            <span id="btnText">Analyze Social Content</span>
+                        </button>
+                        <button type="button" id="resetBtn" class="btn-submit"
+                            style="flex:1; background:#cbd5e1; color:#334155; box-shadow:none;">
+                            <span>↺</span> Reset
+                        </button>
+                    </div>
+                    <div id="errorMsg"
+                        style="color:var(--err); font-size:13px; margin-top:12px; display:none; text-align:center; background:rgba(220, 38, 38, 0.1); padding:10px; border-radius:8px;">
+                    </div>
+                </form>
+            </div>
+
+            <!-- Results Section -->
+            <div id="resultSection" class="result-section">
+                <!-- Status Box -->
+                <div class="result-box" style="border-left: 4px solid var(--gov-blue-primary);">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <div class="result-label">Processing Status</div>
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <span id="statusBadge" class="status-badge status-processing">Initializing...</span>
+                                <span id="refreshSpinner" class="spinner" style="display:none;"></span>
+                            </div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div class="result-label">IDs</div>
+                            <div style="font-size:12px; color:var(--text-sub); font-family:monospace;">
+                                Source: #<span id="sourceIdDisp">-</span> | Complaint: #<span
+                                    id="complaintIdDisp">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preview Area: Evidence + AI -->
+                <div id="contentGrid" class="result-grid"
+                    style="display:none; grid-template-columns: 1.2fr 0.8fr; gap:24px;">
+
+                    <!-- LEFT: Evidence Card -->
+                    <div style="display:flex; flex-direction:column; gap:20px;">
+                        <h3
+                            style="font-size:16px; font-weight:700; color:var(--text-sub); margin:0; text-transform:uppercase; letter-spacing:0.05em;">
+                            1. Evidence Preview</h3>
+                        <div class="result-box" style="border-top:4px solid var(--gov-blue-primary);">
+                            <div class="result-label">Extracted Content</div>
+                            <div style="margin-bottom:12px;">
+                                <div style="font-size:11px; color:var(--text-sub); font-weight:700;">POST TEXT</div>
+                                <div id="postText" class="result-content"
+                                    style="max-height:150px; overflow-y:auto; white-space: pre-wrap; background:#f8fafc; padding:10px; border-radius:6px; border:1px solid #e2e8f0; font-size:13px;">
+                                </div>
+                                <div id="postLen"
+                                    style="font-size:10px; color:var(--text-sub); text-align:right; margin-top:2px;">
+                                </div>
+                            </div>
+
+                            <div>
+                                <div style="font-size:11px; color:var(--text-sub); font-weight:700;">VIDEO TRANSCRIPT
+                                </div>
+                                <div id="transcriptText" class="result-content"
+                                    style="max-height:180px; overflow-y:auto; white-space: pre-wrap; background:#f8fafc; padding:10px; border-radius:6px; border:1px solid #e2e8f0; font-size:13px;">
+                                </div>
+                                <div id="transLen"
+                                    style="font-size:10px; color:var(--text-sub); text-align:right; margin-top:2px;">
+                                </div>
+                            </div>
+
+                            <div style="margin-top:16px;">
+                                <div class="result-label">Metadata</div>
+                                <div id="metaContent" class="result-content"
+                                    style="font-family:monospace; font-size:11px; color:#475569; overflow-x:hidden;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT: AI Analysis Card -->
+                    <div style="display:flex; flex-direction:column; gap:20px;">
+                        <h3
+                            style="font-size:16px; font-weight:700; color:var(--text-sub); margin:0; text-transform:uppercase; letter-spacing:0.05em;">
+                            2. AI Assessment</h3>
+
+                        <div class="result-box"
+                            style="border-top:4px solid var(--gov-blue-accent); background:#eff6ff;">
+                            <div class="result-label" style="color:var(--gov-blue-primary);">Automated Classification
+                            </div>
+
+                            <!-- Tags -->
+                            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;">
+                                <div
+                                    style="background:white; padding:6px 12px; border-radius:6px; border:1px solid #bfdbfe;">
+                                    <div style="font-size:10px; color:var(--text-sub); text-transform:uppercase;">
+                                        Category</div>
+                                    <div id="aiCategory" style="font-weight:700; color:#1e40af; font-size:13px;">-</div>
+                                </div>
+                                <div
+                                    style="background:white; padding:6px 12px; border-radius:6px; border:1px solid #bfdbfe;">
+                                    <div style="font-size:10px; color:var(--text-sub); text-transform:uppercase;">
+                                        Priority</div>
+                                    <div id="aiPriority" style="font-weight:700; color:#1e40af; font-size:13px;">-</div>
+                                </div>
+                                <div
+                                    style="background:white; padding:6px 12px; border-radius:6px; border:1px solid #bfdbfe;">
+                                    <div style="font-size:10px; color:var(--text-sub); text-transform:uppercase;">
+                                        Confidence</div>
+                                    <div id="aiConfidence" style="font-weight:700; color:#1e40af; font-size:13px;">-
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="margin-bottom:12px;">
+                                <div style="font-size:11px; color:var(--text-sub); font-weight:700;">AI SUMMARY</div>
+                                <div id="aiSummary" style="font-size:14px; line-height:1.5; color:#1e293b;">-</div>
+                            </div>
+
+                            <div>
+                                <div style="font-size:11px; color:var(--text-sub); font-weight:700;">RATIONALE</div>
+                                <div id="aiRationale"
+                                    style="font-size:12px; line-height:1.4; color:#64748b; font-style:italic;">-</div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Action -->
+                        <div class="result-box"
+                            style="text-align:center; background:#ffffff; border:1px solid #e2e8f0; padding:24px;">
+                            <p style="font-size:14px; margin-bottom:16px; color:#334155;">
+                                AI analysis complete. Please verify the details before submitting to the official
+                                dashboard.
+                            </p>
+                            <button class="btn-submit" id="finalSubmitBtn" style="width:100%;" disabled>
+                                Confirm & Submit
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Success Message -->
+                <div id="successSection" class="result-box"
+                    style="display:none; text-align:center; background:#f0fdf4; border:1px solid #bbf7d0; padding:40px;">
+                    <div style="font-size:48px; margin-bottom:16px;">✅</div>
+                    <h2 style="color:#166534; margin:0 0 8px 0;">Submitted Successfully</h2>
+                    <p style="color:#15803d; margin-bottom:24px;">This grievance has been added to the Admin Dashboard.
+                    </p>
+
+                    <div
+                        style="background:white; padding:16px; border-radius:8px; display:inline-block; text-align:left; margin-bottom:24px; border:1px solid #dcfce7;">
+                        <div style="margin-bottom:8px;"><strong>Complaint ID:</strong> <span id="successCompId"
+                                style="font-family:monospace;"></span></div>
+                        <div><strong>Source ID:</strong> <span id="successSourceId"
+                                style="font-family:monospace;"></span></div>
+                    </div>
+
+                    <div style="display:flex; justify-content:center; gap:12px;">
+                        <button class="btn-submit"
+                            onclick="copyToClipboard(document.getElementById('successCompId').innerText)"
+                            style="width:auto; padding:10px 20px; font-size:13px; background:#16a34a;">
+                            Copy ID
+                        </button>
+                        <button class="btn-submit" onclick="window.location.href='admin.html'"
+                            style="width:auto; padding:10px 20px; font-size:13px; background:#15803d;">
+                            Open Admin Dashboard
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Manual Entry (Fallback) -->
+                <div id="manualEntrySection" class="result-box"
+                    style="display:none; border:1px solid var(--warn); background:#fffbeb;">
+                    <div class="result-label" style="color:var(--gov-gold);">Manual Entry Required</div>
+                    <p style="font-size:13px; margin-bottom:12px;">Automated extraction failed or was blocked. Please
+                        paste
+                        the content manually.</p>
+                    <textarea id="manualContent" rows="6" placeholder="Paste full text / transcript here..."></textarea>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Official Footer (Premium) -->
+    <footer class="gov-footer-premium">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-block">
+                    <h4>Government of Manipur</h4>
+                    <ul>
+                        <li><a href="#">Chief Minister's Office</a></li>
+                        <li><a href="#">Finance Department</a></li>
+                        <li><a href="#">Public Works Department</a></li>
+                        <li><a href="#">Manipur Police</a></li>
+                    </ul>
+                </div>
+                <div class="footer-block">
+                    <h4>Praja.ai Portal</h4>
+                    <ul>
+                        <li><a href="#">About the Platform</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Accessibility Statement</a></li>
+                    </ul>
+                </div>
+                <div class="footer-block">
+                    <h4>Help & Support</h4>
+                    <ul>
+                        <li><a href="#">FAQ / Knowledge Base</a></li>
+                        <li><a href="#">Track Grievance</a></li>
+                        <li><a href="#">Feedback</a></li>
+                        <li><a href="#">Sitemap</a></li>
+                    </ul>
+                </div>
+                <div class="footer-block">
+                    <h4>Contact Us</h4>
+                    <p style="font-size:14px; color:#cbd5e1; line-height:1.6; margin-bottom:12px;">
+                        Room 101, New Secretariat,<br>
+                        Imphal, Manipur - 795001<br>
+                        <strong>Toll Free:</strong> 1800-MAN-HELP
+                    </p>
+                    <div class="social-icons">
+                        <a href="#">F</a>
+                        <a href="#">X</a>
+                        <a href="#">I</a>
+                        <a href="#">Y</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-bottom-bar">
+                <div>&copy; 2025 Praja.ai &mdash; Government of Manipur. All Rights Reserved.</div>
+                <div>Designed & Developed by SaiyoniX Pvt.ltd</div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="social.js"></script>
+</body>
+
+</html>

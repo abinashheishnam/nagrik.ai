@@ -64,6 +64,14 @@ function breakdownView(b) {
   return `<div class="breakdown"><b>Score breakdown</b><ul>${rows}</ul></div>`;
 }
 
+function displayCategory(obj) {
+  return (obj && (obj.ai_category_name || obj.ai_category || obj.category)) ? (obj.ai_category_name || obj.ai_category || obj.category) : "other";
+}
+
+function displayDept(obj) {
+  return (obj && (obj.suggested_department || obj.department)) ? (obj.suggested_department || obj.department) : "General Administration";
+}
+
 async function checkHealth() {
   try {
     const r = await fetch(`${API}/health`);
@@ -93,7 +101,7 @@ async function submitComplaint() {
 
     resultEl.innerHTML = `
       <div><b>ID:</b> ${esc(data.id)}</div>
-      <div><b>Category:</b> ${esc(data.category)} &nbsp;|&nbsp; <b>Dept:</b> ${esc(data.department)}</div>
+      <div><b>Category:</b> ${esc(displayCategory(data))} &nbsp;|&nbsp; <b>Dept:</b> ${esc(displayDept(data))}</div>
       <div style="margin-top:6px;">
         <b>Priority:</b> ${pill(data.priority)} &nbsp;
         <b>Score:</b> ${esc(data.priority_score)}/100 &nbsp;
@@ -266,7 +274,7 @@ async function startVoice() {
       // Update UI (optional)
       setVoiceStatus("Transcribing...");
 
-      const res = await fetch("http://127.0.0.1:8000/api/v1/stt/transcribe", {
+      const res = await fetch("http://127.0.0.1:8000/api/v1/audio/transcribe", {
         method: "POST",
         body: formData,
       });

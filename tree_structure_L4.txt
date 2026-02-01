@@ -1,0 +1,66 @@
+/home/abinashheishnam21/Desktop/citizen-grievance-ai
+├── praja.ai
+│   ├── backend
+│   │   ├── admin_actions.js
+│   │   ├── alembic.ini
+│   │   ├── app
+│   │   │   ├── ai
+│   │   │   ├── api
+│   │   │   ├── auth
+│   │   │   ├── db
+│   │   │   ├── __init__.py
+│   │   │   ├── main.py
+│   │   │   ├── schemas
+│   │   │   ├── services
+│   │   │   ├── social
+│   │   │   ├── utils
+│   │   │   └── workers
+│   │   ├── backend
+│   │   │   └── app
+│   │   ├── inspect_db.py
+│   │   ├── praja.ai
+│   │   │   └── backend
+│   │   ├── reproduce_audio.py
+│   │   ├── reproduce_draft.py
+│   │   ├── requirements.txt
+│   │   ├── requirements.txt.bak
+│   │   ├── reset_db_script.py
+│   │   ├── scripts
+│   │   │   ├── add_viewed_col.py
+│   │   │   └── rq_failed_debug.py
+│   │   ├── storage
+│   │   │   ├── complaints
+│   │   │   └── social
+│   │   ├── tests
+│   │   │   └── test_api.py
+│   │   ├── test.wav
+│   │   └── tmp_audio
+│   ├── data
+│   │   ├── labels
+│   │   │   └── categories.json
+│   │   └── seed
+│   │       └── sample_complaints.json
+│   ├── docker-compose.yml
+│   ├── docs
+│   │   ├── architecture.md
+│   │   └── pitch.md
+│   ├── frontend
+│   │   ├── admin.html
+│   │   ├── admin_modal_actions.js
+│   │   ├── app
+│   │   │   └── services
+│   │   ├── app.js
+│   │   ├── assets
+│   │   │   ├── loktak_background.png
+│   │   │   └── manipur_emblem.png
+│   │   ├── index.html
+│   │   ├── social.html
+│   │   ├── social.js
+│   │   ├── style.css
+│   │   ├── user_dashboard.html
+│   │   └── user_login.html
+│   └── README.md
+├── tree_structure_L4.txt
+└── tree_structure.txt
+
+31 directories, 33 files

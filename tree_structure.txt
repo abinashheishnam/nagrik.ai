@@ -1,0 +1,42 @@
+/home/abinashheishnam21/Desktop/citizen-grievance-ai
+├── praja.ai
+│   ├── backend
+│   │   ├── admin_actions.js
+│   │   ├── alembic.ini
+│   │   ├── app
+│   │   ├── backend
+│   │   ├── inspect_db.py
+│   │   ├── praja.ai
+│   │   ├── reproduce_audio.py
+│   │   ├── reproduce_draft.py
+│   │   ├── requirements.txt
+│   │   ├── requirements.txt.bak
+│   │   ├── reset_db_script.py
+│   │   ├── scripts
+│   │   ├── storage
+│   │   ├── tests
+│   │   ├── test.wav
+│   │   └── tmp_audio
+│   ├── data
+│   │   ├── labels
+│   │   └── seed
+│   ├── docker-compose.yml
+│   ├── docs
+│   │   ├── architecture.md
+│   │   └── pitch.md
+│   ├── frontend
+│   │   ├── admin.html
+│   │   ├── admin_modal_actions.js
+│   │   ├── app
+│   │   ├── app.js
+│   │   ├── assets
+│   │   ├── index.html
+│   │   ├── social.html
+│   │   ├── social.js
+│   │   ├── style.css
+│   │   ├── user_dashboard.html
+│   │   └── user_login.html
+│   └── README.md
+└── tree_structure.txt
+
+17 directories, 23 files

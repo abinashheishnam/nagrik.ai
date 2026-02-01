@@ -1,25 +1,80 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, HTTPException, Request
+from sqlalchemy.orm import Session, joinedload
+from fastapi import Depends
+from app.auth.rbac import require_roles
 
 from app.db.session import get_db
-from app.db.models import Complaint, User
-from app.schemas.complaint import ComplaintOut
+from app.db.models import Complaint, ComplaintStatusHistory, ComplaintAssignment
+from app.schemas.complaint import ComplaintOut, ComplaintStatusHistoryOut
+from app.schemas.common import StatusUpdateIn
 from app.auth.dependencies import get_current_admin
+from app.services.audit_trail import log_status_change, log_audit
 
-router = APIRouter(prefix="/api/v1/admin/complaints", tags=["admin-complaints"])
+
+def _latest_dept_map(db: Session, complaint_ids: list[int]) -> dict[int, str]:
+    """
+    Return latest department per complaint_id from complaint_assignments.
+    Latest = highest id (newest row). If none, fallback to General Administration.
+    """
+    if not complaint_ids:
+        return {}
+
+    rows = (
+        db.query(ComplaintAssignment)
+        .filter(ComplaintAssignment.complaint_id.in_(complaint_ids))
+        .order_by(ComplaintAssignment.complaint_id.asc(), ComplaintAssignment.id.desc())
+        .all()
+    )
+
+    m: dict[int, str] = {}
+    for r in rows:
+        if r.complaint_id not in m:
+            m[r.complaint_id] = (r.department or "").strip() or "General Administration"
+    return m
+
+
+router = APIRouter(
+  prefix="/admin/complaints",
+  tags=["admin"],
+dependencies=[Depends(require_roles("OFFICER", "ADMIN"))]
+
+
+)
+
+
+@router.get("/{complaint_id}/timeline", response_model=list[ComplaintStatusHistoryOut])
+def get_timeline(complaint_id: int, db: Session = Depends(get_db), admin=Depends(get_current_admin)):
+    filters = [ComplaintStatusHistory.complaint_id == complaint_id]
+    return (
+        db.query(ComplaintStatusHistory)
+        .filter(*filters)
+        .order_by(ComplaintStatusHistory.created_at.desc())
+        .all()
+    )
+
 
 @router.get("", response_model=list[ComplaintOut])
 def all_complaints(db: Session = Depends(get_db), admin=Depends(get_current_admin)):
-    return db.query(Complaint).order_by(Complaint.id.desc()).all()
+    return (
+        db.query(Complaint)
+        .options(joinedload(Complaint.user))  # ✅
+        .order_by(Complaint.id.desc())
+        .all()
+    )
+
 
 @router.get("/{complaint_id}")
 def complaint_detail(complaint_id: int, db: Session = Depends(get_db), admin=Depends(get_current_admin)):
-    c = db.query(Complaint).filter(Complaint.id == complaint_id).first()
+    c = (
+        db.query(Complaint)
+        .options(joinedload(Complaint.user))
+        .filter(Complaint.id == complaint_id)
+        .first()
+    )
     if not c:
         raise HTTPException(status_code=404, detail="Complaint not found")
 
-    u = db.query(User).filter(User.id == c.user_id).first()
-
+    u = c.user
     return {
         "complaint": {
             "id": c.id,
@@ -32,12 +87,91 @@ def complaint_detail(complaint_id: int, db: Session = Depends(get_db), admin=Dep
             "latitude": c.latitude,
             "longitude": c.longitude,
             "address": c.address,
-            "created_at": c.created_at.isoformat()
+            "created_at": c.created_at.isoformat(),
+            "ai_category": c.ai_category,
+            "department": dept_map.get(c.id, "General Administration"),
+            "suggested_department": dept_map.get(c.id, "General Administration"),
+            "ai_priority": c.ai_priority,
+            "ai_confidence": c.ai_confidence,
+            "ai_rationale": c.ai_rationale,
         },
         "user": {
             "id": u.id if u else None,
             "full_name": u.full_name if u else "",
             "phone": u.phone if u else "",
-            "email": u.email if u else ""
+            "email": u.email if u else None,
         }
     }
+
+@router.post("/{complaint_id}/seen")
+def mark_seen(complaint_id: int, db: Session = Depends(get_db), admin=Depends(get_current_admin)):
+    c = db.query(Complaint).filter(Complaint.id == complaint_id).first()
+    if not c:
+        return {"ok": False}  # silent fail ok
+    c.is_viewed_by_admin = True
+    db.commit()
+    return {"ok": True}
+@router.post("/{complaint_id}/status", response_model=ComplaintOut)
+def update_status(
+    complaint_id: int,
+    payload: StatusUpdateIn,
+    request: Request,
+    db: Session = Depends(get_db),
+    admin=Depends(get_current_admin),
+):
+    c = db.query(Complaint).filter(Complaint.id == complaint_id).first()
+    if not c:
+        raise HTTPException(status_code=404, detail="Complaint not found")
+
+    old_status = c.status
+    new_status = payload.status.strip()
+
+    if not new_status:
+        raise HTTPException(status_code=400, detail="Invalid status")
+
+    # Workflow Logic
+    # 0=Open, 1=In Progress, 2=Resolved, 3=Closed
+    levels = {"Open": 0, "In Progress": 1, "Resolved": 2, "Closed": 3}
+    
+    # "Rejected" and "Reopened" are special states that can be transitioned to from anywhere
+    if new_status not in ["Rejected", "Reopened"] and old_status not in ["Rejected", "Reopened"]:
+        old_level = levels.get(old_status, -1)
+        new_level = levels.get(new_status, -1)
+        
+        # Prevent going backwards (e.g. Resolved -> Open)
+        # Exception: You can stay on same status or move forward
+        if new_level < old_level:
+             raise HTTPException(
+                status_code=400, 
+                detail=f"Cannot revert status from '{old_status}' to '{new_status}'. Use 'Reopened' instead."
+            )
+
+    # Update complaint status
+    c.status = new_status
+    db.commit()
+    db.refresh(c)
+
+    # 1. Timeline
+    log_status_change(
+        db,
+        complaint_id=c.id,
+        status=new_status,
+        note=payload.note or f"Status changed from {old_status} to {new_status}",
+        changed_by_admin_id=admin.id,
+    )
+
+    # 2. Audit
+    log_audit(
+        db,
+        actor_type="admin",
+        actor_id=admin.id,
+        action="complaint.status.change",
+        entity_type="complaint",
+        entity_id=c.id,
+        meta={"from": old_status, "to": new_status, "note": payload.note},
+        ip=request.client.host if request.client else None,
+        user_agent=request.headers.get("user-agent"),
+    )
+
+    db.commit()
+    return c

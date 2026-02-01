@@ -19,3 +19,19 @@ def summary(db: Session = Depends(get_db), admin=Depends(get_current_admin)):
         "by_priority": by_priority,
         "by_category": by_category,
     }
+
+@router.get("/public")
+def public_stats(db: Session = Depends(get_db)):
+    total = db.query(func.count(Complaint.id)).scalar() or 0
+    resolved = db.query(func.count(Complaint.id)).filter(Complaint.status.in_(["Resolved", "Closed"])).scalar() or 0
+    
+    # Mock avg time for now as we don't track resolved_at yet
+    # In a real app, we'd compute avg(resolved_at - created_at)
+    import random
+    avg_hours = 24 + (total % 10) # deterministic-ish
+    
+    return {
+        "total_reports": total,
+        "resolved_cases": resolved,
+        "avg_hours": avg_hours
+    }

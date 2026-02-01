@@ -1,0 +1,432 @@
+/* Global Animations */
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(50px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.slide-in-right {
+    animation: slideInRight 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in-up {
+    animation: fadeInUp 0.6s ease-out both;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.pulse {
+    animation: pulse 2s infinite;
+}
+
+/* Stagger delays for children if needed */
+.delay-100 {
+    animation-delay: 100ms;
+}
+
+.delay-200 {
+    animation-delay: 200ms;
+}
+
+.delay-300 {
+    animation-delay: 300ms;
+}
+
+/* --- Index Page Features --- */
+
+/* Live Stats Bar with Glassmorphism */
+.stats-bar {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    margin-bottom: 20px;
+    border-radius: 12px;
+    margin: 10px 20px 30px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+}
+
+.stat-item {
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.stat-number {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--gov-blue-primary);
+    font-family: 'Merriweather', serif;
+}
+
+.stat-desc {
+    font-size: 11px;
+    color: var(--text-sub);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+    line-height: 1;
+}
+
+/* How It Works */
+.how-it-works {
+    padding: 60px 20px;
+    background: #f8fafc;
+    text-align: center;
+}
+
+.hiw-title {
+    font-family: 'Merriweather', serif;
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--gov-blue-dark);
+    margin-bottom: 40px;
+}
+
+.hiw-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.hiw-card {
+    background: white;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border);
+    transition: transform 0.3s, opacity 0.6s ease-out;
+    opacity: 0;
+    transform: translateY(30px);
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    text-align: left;
+}
+
+.hiw-card.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.hiw-card:hover {
+    transform: translateY(-5px);
+}
+
+.hiw-icon {
+    font-size: 40px;
+    flex-shrink: 0;
+}
+
+.hiw-content {
+    flex: 1;
+}
+
+.hiw-step-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gov-blue-dark);
+    margin-bottom: 8px;
+}
+
+.hiw-step-desc {
+    color: var(--text-sub);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* Ticker */
+.ticker-wrap {
+    width: 100%;
+    overflow: hidden;
+    background: #0f172a;
+    color: white;
+    padding: 10px 0;
+    white-space: nowrap;
+    position: relative;
+    z-index: 10;
+}
+
+.ticker {
+    display: inline-block;
+    padding-left: 100%;
+    animation: ticker 40s linear infinite;
+}
+
+.ticker-item {
+    display: inline-block;
+    padding: 0 2rem;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.ticker-item span {
+    color: var(--gov-blue-accent);
+    font-weight: 700;
+}
+
+@keyframes ticker {
+    0% {
+        transform: translate3d(0, 0, 0);
+    }
+
+    100% {
+        transform: translate3d(-100%, 0, 0);
+    }
+}
+
+/* --- Responsive Rules (Mobile) --- */
+@media (max-width: 768px) {
+
+    /* Global layout adjustments */
+    .gov-header {
+        padding: 0 16px;
+        height: 60px;
+    }
+
+    .brand-title {
+        font-size: 15px;
+    }
+
+    .brand-subtitle {
+        font-size: 9px;
+    }
+
+    .content-area,
+    .widget-body,
+    .settings-card,
+    .data-panel,
+    .hiw-card {
+        padding: 20px !important;
+    }
+
+    /* Index Page Stacking */
+    .stats-bar {
+        flex-direction: column;
+        gap: 24px;
+        padding: 30px 20px;
+    }
+
+    .hero-container {
+        padding: 20px 16px;
+    }
+
+    /* Grids become 1-col */
+    .stats-grid,
+    .hiw-grid,
+    .footer-content {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Admin Layout */
+    .main-stage {
+        flex-direction: column;
+    }
+
+    #menuToggle {
+        display: block !important;
+        margin-right: 12px;
+    }
+
+    .sidebar {
+        width: 100%;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        display: none;
+        /* Hidden by default on mobile */
+    }
+
+    .sidebar.mobile-open {
+        display: flex;
+    }
+
+    /* Typography scaling */
+    h1,
+    .widget-title {
+        font-size: 20px !important;
+    }
+
+    .stat-val {
+        font-size: 28px !important;
+    }
+
+    /* Table scrolling */
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Analytics in Admin */
+    #view-analytics>.slide-in-right>div {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Modal */
+    .modal-card {
+        width: 95%;
+        padding: 20px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .detail-col .highlight-box {
+        margin-top: 16px;
+    }
+
+    .modal-body {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .reporter-col {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 20px;
+        margin-bottom: 20px;
+    }
+}
+
+/* WhatsApp Floating Button */
+.whatsapp-float {
+    /* Position handled by container now */
+    background-color: #25d366;
+    color: white;
+    border-radius: 50px;
+    padding: 12px 20px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.whatsapp-float:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
+    background-color: #20bd5a;
+}
+
+/* --- Standardized Premium Footer --- */
+.gov-footer-premium {
+    background: #0f172a;
+    color: #f8fafc;
+    padding: 40px 0 16px 0;
+    font-size: 13px;
+    margin-top: auto;
+}
+
+.footer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.footer-block h4 {
+    font-family: 'Merriweather', serif;
+    color: #f8fafc;
+    margin-bottom: 16px;
+    font-size: 15px;
+    border-bottom: 2px solid var(--gov-blue-accent);
+    display: inline-block;
+    padding-bottom: 6px;
+}
+
+.footer-block ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.footer-block ul li {
+    margin-bottom: 8px;
+}
+
+.footer-block ul li a {
+    color: #94a3b8;
+    text-decoration: none;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.footer-block ul li a:hover {
+    color: white;
+    transform: translateX(5px);
+}
+
+.footer-bottom-bar {
+    border-top: 1px solid #1e293b;
+    padding-top: 16px;
+    display: flex;
+    justify-content: space-between;
+    color: #64748b;
+    font-size: 12px;
+}
+
+.social-icons a {
+    display: inline-flex;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #334155;
+    color: white;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    margin-right: 8px;
+    font-weight: bold;
+    font-size: 12px;
+    transition: 0.2s;
+}
+
+.social-icons a:hover {
+    background: var(--gov-blue-accent);
+    transform: translateY(-2px);
+}
+
+/* Ensure footer container matches header container */
+.gov-footer-premium .container {
+    max-width: 1200px;
+    padding: 0 20px;
+    margin: 0 auto;
+}

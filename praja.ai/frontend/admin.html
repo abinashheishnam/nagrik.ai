@@ -12,6 +12,8 @@
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <link rel="stylesheet" href="style.css">
+
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
@@ -218,13 +220,16 @@
         /* Content Area & Views */
         .content-area {
             flex: 1;
-            padding: 32px 40px;
+            padding: 0;
             overflow-y: auto;
             scroll-behavior: smooth;
+            display: flex;
+            flex-direction: column;
         }
 
         .view-section {
             display: none;
+            padding: 32px 40px;
             /* Hidden by default */
         }
 
@@ -645,6 +650,73 @@
                 opacity: 1;
             }
         }
+
+        /* --- Stepper (Amazon-style) --- */
+        .stepper-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding: 0 10px;
+            position: relative;
+        }
+
+        .step-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 12px;
+            color: var(--text-sub);
+            position: relative;
+            z-index: 2;
+            flex: 1;
+        }
+
+        .step-item.active {
+            color: var(--gov-blue-primary);
+            font-weight: 700;
+        }
+
+        .step-item.completed {
+            color: var(--gov-green);
+            font-weight: 700;
+        }
+
+        .step-circle {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--surface);
+            border: 2px solid var(--border);
+            margin-bottom: 6px;
+            display: grid;
+            place-items: center;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .step-item.active .step-circle {
+            border-color: var(--gov-blue-primary);
+            background: var(--gov-blue-primary);
+            color: white;
+        }
+
+        .step-item.completed .step-circle {
+            border-color: var(--gov-green);
+            background: var(--gov-green);
+            color: white;
+        }
+
+        /* Line behind circles */
+        .stepper-line-bg {
+            position: absolute;
+            top: 12px;
+            left: 50px;
+            right: 50px;
+            height: 2px;
+            background: var(--border);
+            z-index: 1;
+        }
     </style>
 </head>
 
@@ -659,7 +731,11 @@
             </div>
         </div>
         <div class="header-controls">
-            <div class="role-badge">OFFICER PANEL</div>
+            <!-- Mobile Toggle -->
+            <button id="menuToggle"
+                style="display:none; background:none; border:none; font-size:24px; cursor:pointer;">☰</button>
+
+            <span class="role-badge">OFFICER PANEL</span>
             <button onclick="logout()" class="btn-logout">Sign Out</button>
         </div>
     </header>
@@ -679,6 +755,7 @@
             <div class="nav-item" onclick="switchView('settings', this)">
                 <span>⚙️</span> Settings
             </div>
+
         </div>
 
         <!-- Content -->
@@ -691,7 +768,7 @@
                     <div class="last-update" id="lastSyncTime">Syncing...</div>
                 </div>
 
-                <div class="stats-grid">
+                <div class="stats-grid slide-in-right">
                     <div class="stat-card">
                         <div class="stat-label">Total Reports</div>
                         <div class="stat-val" id="valTotal">-</div>
@@ -717,7 +794,7 @@
                             <span>🔄</span> Sync Data
                         </button>
                     </div>
-                    <div class="table-container">
+                    <div class="table-container slide-in-right delay-100">
                         <table>
                             <thead>
                                 <tr>
@@ -739,12 +816,36 @@
             <div id="view-analytics" class="view-section">
                 <div class="page-title-row">
                     <div class="page-title">Analytics Engine</div>
+                    <div class="last-update">Real-time Insights</div>
                 </div>
-                <div class="settings-card" style="text-align:center; padding:60px;">
-                    <div style="font-size:48px; margin-bottom:16px;">📈</div>
-                    <h3>Advanced Analytics Module</h3>
-                    <p style="color:var(--text-sub);">AI-driven insights and predictive heatmaps are compiling...</p>
-                    <span class="role-badge" style="margin-top:16px; display:inline-block;">COMING SOON</span>
+
+                <div class="slide-in-right">
+                    <!-- Top Row: Pie + Bar -->
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:24px; margin-bottom:24px;">
+                        <div class="data-panel" style="min-height:auto; padding:24px;">
+                            <h3 style="margin:0 0 20px 0; font-size:16px; color:var(--gov-blue-dark);">Grievance Status
+                                Distribution</h3>
+                            <div style="height:250px; position:relative;">
+                                <canvas id="chartStatus"></canvas>
+                            </div>
+                        </div>
+                        <div class="data-panel" style="min-height:auto; padding:24px;">
+                            <h3 style="margin:0 0 20px 0; font-size:16px; color:var(--gov-blue-dark);">Complaints by
+                                Category</h3>
+                            <div style="height:250px; position:relative;">
+                                <canvas id="chartCategory"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Row: Trend Line -->
+                    <div class="data-panel" style="min-height:auto; padding:24px;">
+                        <h3 style="margin:0 0 20px 0; font-size:16px; color:var(--gov-blue-dark);">Submission Trend
+                            (Last 7 Days)</h3>
+                        <div style="height:300px; position:relative;">
+                            <canvas id="chartTrend"></canvas>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -820,6 +921,59 @@
 
             </div>
 
+            <!-- Official Footer (Premium) -->
+            <footer class="gov-footer-premium" id="adminFooter">
+                <div class="container">
+                    <div class="footer-grid">
+                        <div class="footer-block">
+                            <h4>Government of Manipur</h4>
+                            <ul>
+                                <li><a href="#">Chief Minister's Office</a></li>
+                                <li><a href="#">Finance Department</a></li>
+                                <li><a href="#">Public Works Department</a></li>
+                                <li><a href="#">Manipur Police</a></li>
+                            </ul>
+                        </div>
+                        <div class="footer-block">
+                            <h4>Manipur Grievance Portal</h4>
+                            <ul>
+                                <li><a href="#">About the Platform</a></li>
+                                <li><a href="#">Terms of Service</a></li>
+                                <li><a href="#">Privacy Policy</a></li>
+                                <li><a href="#">Accessibility Statement</a></li>
+                            </ul>
+                        </div>
+                        <div class="footer-block">
+                            <h4>Help & Support</h4>
+                            <ul>
+                                <li><a href="#">FAQ / Knowledge Base</a></li>
+                                <li><a href="#">Track Grievance</a></li>
+                                <li><a href="#">Feedback</a></li>
+                                <li><a href="#">Sitemap</a></li>
+                            </ul>
+                        </div>
+                        <div class="footer-block">
+                            <h4>Contact Us</h4>
+                            <p style="font-size:14px; color:#cbd5e1; line-height:1.6; margin-bottom:12px;">
+                                Room 101, New Secretariat,<br>
+                                Imphal, Manipur - 795001<br>
+                                <strong>Toll Free:</strong> 1800-MAN-HELP
+                            </p>
+                            <div class="social-icons">
+                                <a href="#">F</a>
+                                <a href="#">X</a>
+                                <a href="#">I</a>
+                                <a href="#">Y</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="footer-bottom-bar">
+                        <div>&copy; 2025 Praja.ai &mdash; Government of Manipur. All Rights Reserved.</div>
+                        <div>Designed & Developed by SaiyoniX Pvt.ltd</div>
+                    </div>
+                </div>
+            </footer>
         </div>
     </div>
 
@@ -864,18 +1018,71 @@
 
                 <!-- Right: Issue Details -->
                 <div class="detail-col">
+                    <!-- Case Actions -->
+                    <div style="margin-top:24px;" class="highlight-box">
+                        <div class="info-label" style="color:var(--gov-gold);">Case Actions</div>
+                        <!-- Stepper -->
+                        <div id="modalStepper"></div>
+
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px; margin-top:10px;">
+                            <div>
+                                <div class="info-label">Current Status</div>
+                                <div class="info-value" id="modalStatus">-</div>
+                            </div>
+                            <div>
+                                <div class="info-label">Update Status</div>
+                                <select id="modalStatusSelect"
+                                    style="width:100%; padding:10px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text-main);">
+                                    <option value="Open">Open</option>
+                                    <option value="In Progress">In Progress</option>
+                                    <option value="Resolved">Resolved</option>
+                                    <option value="Closed">Closed</option>
+                                    <option value="Rejected">Rejected</option>
+                                    <option value="Reopened">Reopened</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="margin-top:12px;">
+                            <div class="info-label">Action Note (optional)</div>
+                            <input id="modalStatusNote" type="text" placeholder="e.g. Assigned team, work started..."
+                                style="width:100%; padding:10px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text-main);" />
+                        </div>
+
+                        <div style="display:flex; gap:10px; align-items:center; margin-top:12px;">
+                            <button class="btn-view" id="btnUpdateStatus" onclick="updateStatusFromModal()">
+                                Update Status
+                            </button>
+                            <div id="modalActionMsg" style="font-size:13px; color:var(--text-sub);"></div>
+                        </div>
+                    </div>
+
+                    <!-- Timeline -->
+                    <div style="margin-top:18px;" class="highlight-box">
+                        <div class="info-label" style="color:var(--gov-gold);">Case Timeline</div>
+                        <div id="modalTimeline" style="margin-top:10px; display:flex; flex-direction:column; gap:10px;">
+                            <div style="color:var(--text-sub); font-size:13px;">Timeline will appear here.</div>
+                        </div>
+                    </div>
+
                     <div class="highlight-box">
                         <div class="info-label" style="color:var(--gov-gold);">Issue Summary</div>
                         <div class="info-value"
                             style="font-size:16px; font-weight:600; color:var(--text-main); margin-bottom:8px;"
                             id="modalTitle">-</div>
                         <div class="info-value" style="line-height:1.6;" id="modalDesc">-</div>
+
+                        <div id="audioBox" style="margin:12px 0;"></div>
                     </div>
 
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:24px; margin-bottom:24px;">
                         <div>
                             <div class="info-label">AI Category</div>
                             <div class="info-value" id="modalAICat">-</div>
+                        </div>
+                        <div>
+                            <div class="info-label">Suggested Department</div>
+                            <div class="info-value" id="modalDept">-</div>
                         </div>
                         <div>
                             <div class="info-label">AI Priority</div>
@@ -912,7 +1119,32 @@
     </div>
 
     <script>
+        const adminToken = localStorage.getItem("ADMIN_TOKEN");
+        const role = (localStorage.getItem("ROLE") || "").toUpperCase();
+
+        if (!adminToken || !["OFFICER", "ADMIN"].includes(role)) {
+            localStorage.removeItem("ADMIN_TOKEN");
+            localStorage.removeItem("ROLE");
+            window.location.replace("user_login.html");
+            throw new Error("Blocked: not authenticated as admin/officer");
+        }
+
+
+        function getAdminAuthHeaders() {
+            const token =
+                localStorage.getItem("ADMIN_TOKEN") ||
+                localStorage.getItem("admin_token") ||
+                localStorage.getItem("adminToken") ||
+                localStorage.getItem("token") ||
+                "";
+            return token ? { "Authorization": `Bearer ${token}` } : {};
+        }
+
         const API = "http://127.0.0.1:8000/api/v1";
+
+
+
+
         let currentData = [];
         let map = null, marker = null;
         const geoCache = new Map();
@@ -946,21 +1178,45 @@
             // Update View
             document.querySelectorAll(".view-section").forEach(el => el.classList.remove("active"));
             document.getElementById(`view-${viewName}`).classList.add("active");
+
+            // Footer Visibility Logic
+            const footer = document.getElementById("adminFooter");
+            if (footer) {
+                if (viewName === 'analytics' || viewName === 'workforce') {
+                    footer.style.display = 'none';
+                } else {
+                    footer.style.display = 'block';
+                }
+            }
+
+            if (viewName === 'analytics') {
+                updateAnalytics(currentData);
+            }
         }
 
         function logout() {
-            localStorage.removeItem("admin_token");
+            localStorage.removeItem("ADMIN_TOKEN");
+            localStorage.removeItem("ROLE");
             window.location.href = "user_login.html";
         }
 
+
         // --- Data Loading (Dashboard) ---
-        async function loadData() {
+        window.loadData = async function loadData() {
+
             const btn = document.querySelector(".btn-sync span");
             if (btn) btn.style.transform = "rotate(360deg)";
             if (btn) btn.style.transition = "transform 0.5s";
 
             try {
-                const r = await fetch(`${API}/complaints/`, { cache: 'no-store' });
+                const r = await fetch(`${API}/admin/complaints`, {
+                    cache: "no-store",
+                    headers: {
+                        ...getAdminAuthHeaders()
+                    }
+                });
+
+
                 const data = await r.json();
                 currentData = data || [];
 
@@ -1021,6 +1277,7 @@
 
         // --- Views & Modal ---
         function viewDetails(index) {
+
             const item = currentData[index];
             if (!item) return;
 
@@ -1033,13 +1290,35 @@
             setText("modalDesc", item.description);
             setText("modalAddress", item.address);
 
-            setText("modalAICat", item.ai_category);
+            // New helpers
+            function displayCategory(obj) {
+                return (obj && (obj.ai_category_name || obj.ai_category)) ? (obj.ai_category_name || obj.ai_category) : "other";
+            }
+
+            function displayDept(obj) {
+                return (obj && obj.suggested_department) ? obj.suggested_department : "General Administration";
+            }
+
+            setText("modalAICat", displayCategory(item));
+            setText("modalDept", displayDept(item));
             setText("modalAIPrio", item.ai_priority);
             setText("modalRisk", `${Math.round((item.ai_confidence || 0) * 100)}% Confidence`);
             setText("modalRationale", item.ai_rationale);
             setText("modalRefId", `Case Ref: #${item.id}`);
 
             document.getElementById('detailModal').classList.add('active');
+
+            // Mark as seen
+            fetch(`${API}/admin/complaints/${item.id}/seen`, {
+                method: "POST", headers: { ...getAdminAuthHeaders() }
+            }).catch(e => console.error("Mark seen failed", e));
+
+            // init modal actions: status select + timeline load
+            loadComplaintEvidence(item.id);
+            if (window.prajaModalActions?.initForComplaint) {
+                window.prajaModalActions.initForComplaint(item);
+            }
+
             setTimeout(() => initMap(item), 100);
         }
 
@@ -1126,7 +1405,17 @@
 
         function updateStats(data) {
             document.getElementById("valTotal").innerText = data.length;
-            document.getElementById("valCritical").innerText = data.filter(d => d.priority === "Critical").length;
+
+            const crit = data.filter(d => {
+                const p = (d.priority || "").toLowerCase();
+                const ap = (d.ai_priority || "").toLowerCase();
+                const risk = d.ai_confidence || 0;
+
+                // Count as critical if explicitly labeled Critical/High OR if AI confidence is > 80%
+                return p === "critical" || ap === "critical" || p === "high" || ap === "high" || risk > 0.8;
+            }).length;
+            document.getElementById("valCritical").innerText = crit;
+
             document.getElementById("valPending").innerText = data.filter(d => d.status === "Open").length;
 
             const totalRisk = data.reduce((acc, curr) => acc + (curr.ai_confidence || 0), 0);
@@ -1146,8 +1435,265 @@
         function escapeHTML(str) { return String(str || "").replaceAll("<", "&lt;").replaceAll(">", "&gt;"); }
 
         loadData();
+        // called by the modal button onclick="updateStatusFromModal()"
+        window.updateStatusFromModal = function updateStatusFromModal() {
+            if (!window.prajaModalActions?.updateStatusFromModal) {
+                showToast("Modal actions not loaded. Check admin_modal_actions.js path.", "error");
+                return;
+            }
+            // refresh table after update
+            window.prajaModalActions.updateStatusFromModal(() => window.loadData && window.loadData());
+        };
+        // keep this outside so we can revoke old object URLs
+        let __lastAudioObjectUrl = null;
+
+        async function loadComplaintEvidence(complaintId) {
+            const box = document.getElementById("audioBox");
+            if (!box) return;
+
+            box.innerHTML = `<em style="opacity:.8;">Checking evidence…</em>`;
+
+            try {
+                // 1) list evidence (works with auth headers)
+                const r = await fetch(`${API}/evidence/complaints/${complaintId}`, {
+                    cache: "no-store",
+                    headers: { ...getAdminAuthHeaders() }
+                });
+
+                if (!r.ok) throw new Error(`Evidence fetch failed: ${r.status}`);
+                const payload = await r.json();
+
+                // support array OR {items:[]} OR {data:[]}
+                const items = Array.isArray(payload) ? payload : (payload.items || payload.data || []);
+                if (!items.length) {
+                    box.innerHTML = `<em style="opacity:.8;">No evidence attached.</em>`;
+                    return;
+                }
+
+                // 2) detect audio even if backend labels it weirdly
+                const isAudio = (x) => {
+                    const t = (x.type || x.evidence_type || "").toLowerCase();
+                    const mime = (x.mime || x.mime_type || x.content_type || "").toLowerCase();
+                    const name = (x.name || x.filename || "").toLowerCase();
+
+                    return (
+                        t === "audio" ||
+                        mime.startsWith("audio/") ||
+                        name.endsWith(".wav") || name.endsWith(".mp3") || name.endsWith(".m4a") || name.endsWith(".ogg")
+                    );
+                };
+
+                const audios = items.filter(isAudio);
+                if (!audios.length) {
+                    box.innerHTML = `<em style="opacity:.8;">No audio attached.</em>`;
+                    return;
+                }
+                // Prefer playable audio mime first, then latest
+                const playable = audios.filter(a => String(a.mime || a.mime_type || "").startsWith("audio/"));
+                (playable.length ? playable : audios).sort((a, b) => (b.id || 0) - (a.id || 0));
+                const audio = (playable.length ? playable : audios)[0];
+
+                const mime = (audio.mime || audio.mime_type || "audio/wav");
+
+
+                const audioId = audio.id;
+                const name = audio.name || audio.filename || `audio-${audioId}`;
+                const sizeBytes = Number(audio.size ?? audio.file_size ?? 0);
+
+                // 4) fetch audio WITH auth header, convert to blob, then play via object URL
+                const audioRes = await fetch(`${API}/evidence/audio/${audioId}?t=${Date.now()}`, {
+                    cache: "no-store",
+                    headers: { ...getAdminAuthHeaders() }
+                });
+
+                if (!audioRes.ok) throw new Error(`Audio fetch failed: ${audioRes.status}`);
+
+                const blob = await audioRes.blob();
+
+                // revoke previous object URL to avoid memory leaks
+                if (__lastAudioObjectUrl) URL.revokeObjectURL(__lastAudioObjectUrl);
+                __lastAudioObjectUrl = URL.createObjectURL(blob);
+
+                box.innerHTML = `
+      <div style="padding:10px;border:1px solid rgba(0,0,0,.12);border-radius:10px;">
+        <div style="font-weight:700;margin-bottom:6px;">Citizen Audio (Latest)</div>
+        <audio controls style="width:100%;" src="${__lastAudioObjectUrl}"></audio>
+        <div style="font-size:12px;opacity:.8;margin-top:6px;">
+          ${escapeHTML(name)} • ${sizeBytes ? (sizeBytes / 1024).toFixed(1) + " KB" : "size unknown"}
+        </div>
+      </div>
+    `;
+            } catch (e) {
+                box.innerHTML = `<span style="color:#b00020;">Audio load failed.</span>`;
+                console.error(e);
+            }
+        }
+
 
     </script>
+    <script>
+        // Mobile Sidebar Toggle
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.querySelector('.sidebar');
+
+        if (menuToggle && sidebar) {
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('mobile-open');
+            });
+
+            // Close sidebar when clicking a nav item on mobile
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    if (window.innerWidth <= 768) {
+                        sidebar.classList.remove('mobile-open');
+                    }
+                });
+            });
+        }
+    </script>
+    <script>
+        // --- Analytics Module ---
+        let charts = { status: null, category: null, trend: null };
+
+        function updateAnalytics(data) {
+            if (!document.getElementById("view-analytics").classList.contains("active")) return;
+            if (!data || !data.length) return;
+
+            renderStatusChart(data);
+            renderCategoryChart(data);
+            renderTrendChart(data);
+        }
+
+        function renderStatusChart(data) {
+            const ctx = document.getElementById('chartStatus').getContext('2d');
+            const counts = {};
+            data.forEach(d => {
+                const s = d.status || "Open";
+                counts[s] = (counts[s] || 0) + 1;
+            });
+
+            const labels = Object.keys(counts);
+            const vals = Object.values(counts);
+
+            if (charts.status) charts.status.destroy();
+
+            charts.status = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: vals,
+                        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#64748b'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right' }
+                    }
+                }
+            });
+        }
+
+        function renderCategoryChart(data) {
+            const ctx = document.getElementById('chartCategory').getContext('2d');
+            const counts = {};
+            data.forEach(d => {
+                const c = d.category || "Uncategorized";
+                counts[c] = (counts[c] || 0) + 1;
+            });
+
+            // Sort by count
+            const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8);
+            const labels = sorted.map(x => x[0]);
+            const vals = sorted.map(x => x[1]);
+
+            if (charts.category) charts.category.destroy();
+
+            charts.category = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Complaints',
+                        data: vals,
+                        backgroundColor: '#1e3a8a',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, grid: { display: false } },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function renderTrendChart(data) {
+            const ctx = document.getElementById('chartTrend').getContext('2d');
+
+            // Group by date (created_at)
+            const days = {};
+            // Last 7 days init
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const str = d.toISOString().split('T')[0];
+                days[str] = 0;
+            }
+
+            data.forEach(d => {
+                if (!d.created_at) return;
+                const str = d.created_at.split('T')[0];
+                if (days[str] !== undefined) days[str]++;
+            });
+
+            const labels = Object.keys(days).map(d => {
+                const date = new Date(d);
+                return `${date.getDate()}/${date.getMonth() + 1}`;
+            });
+            const vals = Object.values(days);
+
+            if (charts.trend) charts.trend.destroy();
+
+            charts.trend = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'New Reports',
+                        data: vals,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+    </script>
+
+
+    <script src="admin_modal_actions.js"></script>
+
+
+
+
 </body>
 
 </html>

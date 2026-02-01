@@ -1,0 +1,63 @@
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Tuple, Dict, Any
+import os
+import time
+
+import yt_dlp
+
+
+def download_youtube_audio(url: str, out_dir: str, video_id: str) -> Tuple[str, Dict[str, Any]]:
+    """
+    Downloads best audio and converts to mp3 using ffmpeg postprocessor.
+    Returns (audio_path, meta).
+    """
+    Path(out_dir).mkdir(parents=True, exist_ok=True)
+
+    # Store as: <out_dir>/<video_id>.mp3
+    outtmpl = str(Path(out_dir) / f"{video_id}.%(ext)s")
+
+    meta: Dict[str, Any] = {
+        "url": url,
+        "video_id": video_id,
+        "out_dir": out_dir,
+        "started_at": int(time.time()),
+    }
+
+    ydl_opts = {
+        "format": "bestaudio/best",
+        "outtmpl": outtmpl,
+        "noplaylist": True,
+        "quiet": True,
+        "no_warnings": True,
+        # safety
+        "retries": 3,
+        "socket_timeout": 20,
+        # filesize cap (bytes) ~ 80MB
+        "max_filesize": 80 * 1024 * 1024,
+        # convert to mp3 (requires ffmpeg)
+        "postprocessors": [
+            {
+                "key": "FFmpegExtractAudio",
+                "preferredcodec": "mp3",
+                "preferredquality": "128",
+            }
+        ],
+    }
+
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(url, download=True)
+        meta["title"] = info.get("title")
+        meta["uploader"] = info.get("uploader")
+        meta["duration"] = info.get("duration")
+        meta["webpage_url"] = info.get("webpage_url")
+
+    audio_path = str(Path(out_dir) / f"{video_id}.mp3")
+    if not os.path.exists(audio_path):
+        # Some edge cases may output different extension; fail loudly
+        raise RuntimeError(f"audio_download_failed: expected {audio_path} not found")
+
+    meta["audio_path"] = audio_path
+    meta["finished_at"] = int(time.time())
+    return audio_path, meta

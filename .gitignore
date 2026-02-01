@@ -33,3 +33,31 @@ backend/venv/
 
 # Cache
 .cache/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+praja.ai/backend/venv/
+
+# Environment / secrets
+.env
+*.env
+
+# Uploads / storage (VERY IMPORTANT)
+praja.ai/backend/storage/
+praja.ai/backend/tmp_audio/
+praja.ai/backend/test.wav
+praja.ai/backend/*.wav
+praja.ai/backend/*.mp3
+praja.ai/backend/storage/**
+
+# Logs
+*.log
+
+# OS / IDE
+.DS_Store
+.vscode/

@@ -1,0 +1,340 @@
+from __future__ import annotations
+
+from datetime import datetime
+import hashlib
+
+from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
+
+from app.db.session import SessionLocal
+from app.db.social_models import SocialSource, ExtractedSignals, AIInferenceRun
+from app.db.models import Complaint, AuditLog
+from app.utils.social_platform import detect_platform
+
+from app.social.extractors.youtube import extract as extract_youtube
+from app.social.downloaders.http_fetch import fetch_html
+from app.social.extractors.html_article import extract_article
+from app.social.downloaders.youtube_audio import download_youtube_audio
+from app.social.transcribe_whisper import transcribe_audio
+
+
+def _db() -> Session:
+    return SessionLocal()
+
+
+def _sha256(s: str) -> str:
+    return hashlib.sha256((s or "").encode("utf-8", errors="ignore")).hexdigest()
+
+
+def process_social_source(social_source_id: int) -> None:
+    db = _db()
+    try:
+        ss = db.query(SocialSource).filter(SocialSource.id == social_source_id).first()
+        if not ss:
+            return
+
+        # Mark running (do not break existing states)
+        ss.status = "FETCHING"
+        ss.error = None
+        db.commit()
+
+        platform = ss.platform or detect_platform(ss.url)
+
+        extracted_text: str = ""
+        transcript_text: str | None = None
+
+        # Pipeline markers (observability)
+        meta: dict = {
+            "platform": platform,
+            "url": ss.url,
+            "pipeline": "social_jobs_v2",
+            "audio_attempted": False,
+            "audio_stage": "not_started",
+        }
+
+        platform_id: str | None = None
+        canonical_url: str = ss.url
+
+        # ----------------------------
+        # 1) EXTRACT (platform-specific)
+        # ----------------------------
+        if platform == "youtube":
+            try:
+                yt = extract_youtube(ss.url)
+            except ValueError as ve:
+                ss.status = "INVALID_URL"
+                ss.error = str(ve)
+                db.commit()
+                return
+            except Exception as e:
+                ss.status = "FAILED"
+                ss.error = f"youtube_extract_failed: {e}"
+                db.commit()
+                return
+
+            platform_id = yt.get("platform_id")
+            canonical_url = yt.get("canonical_url") or ss.url
+
+            meta.update(
+                {
+                    "title": yt.get("title"),
+                    "author_name": yt.get("author_name"),
+                    "author_url": yt.get("author_url"),
+                    "thumbnail_url": yt.get("thumbnail_url"),
+                    "transcript_meta": yt.get("transcript_meta"),
+                    "raw_oembed": yt.get("raw_oembed"),
+                }
+            )
+
+            extracted_text = (yt.get("title") or "").strip()
+            transcript_text = yt.get("transcript")  # may be None
+
+            # ----------------------------
+            # 2) EVIDENCE EXPANSION (yt-dlp + whisper)
+            # ----------------------------
+            meta["audio_attempted"] = True
+            meta["audio_stage"] = "starting"
+
+            try:
+                if platform_id:
+                    out_dir = "storage/social/youtube"
+                    audio_path, dmeta = download_youtube_audio(
+                        ss.url, out_dir=out_dir, video_id=platform_id
+                    )
+                    meta["audio_download"] = dmeta
+                    meta["audio_path"] = audio_path
+                    meta["audio_stage"] = "downloaded"
+
+                    # Auto language detect (set language="hi" if you want Hindi bias)
+                    wtext, wmeta = transcribe_audio(audio_path, language=None)
+                    meta["whisper"] = wmeta
+
+                    wclean = (wtext or "").strip()
+                    meta["whisper_text_len"] = len(wclean)
+                    meta["whisper_preview"] = wclean[:200] if wclean else ""
+
+                    if wclean:
+                        transcript_text = wclean
+                        meta["audio_stage"] = "transcribed"
+                    else:
+                        # Whisper ran but produced nothing. Store empty transcript ("") for DB truth.
+                        # This makes LENGTH(transcript) = 0 instead of NULL.
+                        if transcript_text is None:
+                            transcript_text = ""
+                        meta["audio_stage"] = "transcribed_empty"
+                else:
+                    meta["audio_stage"] = "skipped_no_platform_id"
+
+            except Exception as e:
+                meta["audio_or_whisper_error"] = str(e)
+                meta["audio_stage"] = "error"
+
+        else:
+            # ----------------------------
+            # Non-youtube extraction
+            # ----------------------------
+            transcript_text = None
+
+            if platform == "web":
+                try:
+                    html, fmeta = fetch_html(ss.url, timeout=20)
+                    text, emeta = extract_article(html)
+
+                    extracted_text = (text or "")[:20000]  # guardrails
+                    canonical_url = fmeta.get("final_url") or ss.url
+                    meta.update({"fetch": fmeta, "extract": emeta})
+                    ss.status = "EXTRACTED"
+                    db.commit()
+                except Exception as e:
+                    ss.status = "FAILED"
+                    ss.error = f"web_extract_failed: {e}"
+                    db.commit()
+                    return
+
+            elif platform in ("x", "instagram", "facebook"):
+                # best-effort fetch; many will be blocked by login walls
+                try:
+                    html, fmeta = fetch_html(ss.url, timeout=20)
+                    low = (html or "").lower()
+
+                    if "login" in low and ("password" in low or "sign in" in low):
+                        ss.status = "BLOCKED"
+                        ss.error = "platform_requires_login_or_blocked"
+                        meta.update({"fetch": fmeta, "blocked_hint": "login_wall"})
+                        extracted_text = ""
+                        db.commit()
+                        return
+
+                    text, emeta = extract_article(html)
+                    extracted_text = (text or "")[:12000]
+                    canonical_url = fmeta.get("final_url") or ss.url
+                    meta.update({"fetch": fmeta, "extract": emeta, "note": "best_effort_social_html"})
+                    ss.status = "EXTRACTED"
+                    db.commit()
+                except Exception as e:
+                    ss.status = "BLOCKED"
+                    ss.error = f"fetch_failed_or_blocked: {e}"
+                    db.commit()
+                    return
+
+            else:
+                extracted_text = f"Social link submitted: {ss.url}"
+
+        # Combined for hashing + AI summary
+        combined = (extracted_text or "")
+        if transcript_text is not None and transcript_text != "":
+            combined += "\n\n" + transcript_text
+
+        payload_hash = _sha256(combined)
+
+        # ----------------------------
+        # 3) DUPLICATE GUARD (prevents IntegrityError)
+        # ----------------------------
+        if platform_id:
+            existing = (
+                db.query(SocialSource)
+                .filter(SocialSource.platform == platform)
+                .filter(SocialSource.platform_id == platform_id)
+                .filter(SocialSource.id != ss.id)
+                .first()
+            )
+            if existing:
+                ss.status = "DUPLICATE"
+                ss.error = f"duplicate_of_social_source_id={existing.id}"
+                if hasattr(ss, "fetched_at"):
+                    ss.fetched_at = datetime.utcnow()
+                db.commit()
+                return
+
+        # ----------------------------
+        # 4) UPDATE social_sources (commit safely)
+        # ----------------------------
+        try:
+            if hasattr(ss, "platform_id"):
+                ss.platform_id = platform_id
+            if hasattr(ss, "canonical_url"):
+                ss.canonical_url = canonical_url
+            if hasattr(ss, "payload_hash"):
+                ss.payload_hash = payload_hash
+            if hasattr(ss, "fetched_at"):
+                ss.fetched_at = datetime.utcnow()
+
+            ss.status = "FETCHED"
+            db.commit()
+
+        except IntegrityError as e:
+            # MUST rollback before any more operations
+            db.rollback()
+
+            ss2 = db.query(SocialSource).filter(SocialSource.id == social_source_id).first()
+            if ss2:
+                ss2.status = "DUPLICATE"
+                ss2.error = "integrity_duplicate:" + str(e)
+                db.commit()
+            return
+
+        # ----------------------------
+        # 5) UPSERT extracted_signals BY social_source_id
+        # ----------------------------
+        signals = None
+        if hasattr(ExtractedSignals, "social_source_id"):
+            signals = (
+                db.query(ExtractedSignals)
+                .filter(ExtractedSignals.social_source_id == ss.id)
+                .first()
+            )
+
+        # Fallback (older data) - but your DB already has social_source_id
+        if signals is None:
+            signals = (
+                db.query(ExtractedSignals)
+                .filter(ExtractedSignals.complaint_id == ss.complaint_id)
+                .first()
+            )
+
+        if not signals:
+            signals = ExtractedSignals(
+                complaint_id=ss.complaint_id,
+                social_source_id=ss.id if hasattr(ExtractedSignals, "social_source_id") else None,
+                post_text=extracted_text,
+                transcript=transcript_text,
+                ocr_text=None,
+                entities=None,
+                source_metadata=meta,
+            )
+            db.add(signals)
+        else:
+            signals.post_text = extracted_text
+            signals.transcript = transcript_text
+            signals.source_metadata = meta
+            if hasattr(signals, "social_source_id") and signals.social_source_id is None:
+                signals.social_source_id = ss.id
+
+        # Commit signals early so DB always shows what happened
+        db.commit()
+
+        # ----------------------------
+        # 6) AI STUB (keeps platform functional)
+        # ----------------------------
+        ai_output = {
+            "category": "General",
+            "priority": "Medium",
+            "summary": (combined[:500] + "...") if len(combined) > 500 else combined,
+            "rationale": "Extracted social evidence (title/transcript when available). ML classification will replace this output next.",
+            "signals": {
+                "platform": platform,
+                "platform_id": platform_id,
+                "has_transcript": bool(transcript_text) and transcript_text != "",
+                "whisper_text_len": meta.get("whisper_text_len", None),
+                "audio_stage": meta.get("audio_stage"),
+            },
+        }
+
+        db.add(
+            AIInferenceRun(
+                complaint_id=ss.complaint_id,
+                model_name="social_evidence_v2",
+                model_version="v2",
+                output=ai_output,
+                confidence=0.55,
+                requires_review=1,
+            )
+        )
+
+        c = db.query(Complaint).filter(Complaint.id == ss.complaint_id).first()
+        if c:
+            c.ai_category = ai_output["category"]
+            c.ai_priority = ai_output["priority"]
+            c.ai_confidence = 0.55
+            c.ai_summary = ai_output["summary"]
+            c.ai_rationale = ai_output["rationale"]
+            c.status = "AI_PROPOSED"
+
+        db.add(
+            AuditLog(
+                actor_type="system",
+                actor_id=0,
+                action="social_processed",
+                entity_type="complaint",
+                entity_id=ss.complaint_id,
+                meta={"social_source_id": ss.id, "platform": platform, "platform_id": platform_id},
+                ip=None,
+                user_agent="worker",
+            )
+        )
+
+        ss.status = "DONE"
+        db.commit()
+
+    except Exception as e:
+        try:
+            db.rollback()
+            ss = db.query(SocialSource).filter(SocialSource.id == social_source_id).first()
+            if ss:
+                ss.status = "FAILED"
+                ss.error = str(e)
+                db.commit()
+        finally:
+            raise
+    finally:
+        db.close()

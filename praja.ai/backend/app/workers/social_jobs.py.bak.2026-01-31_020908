@@ -1,0 +1,163 @@
+from __future__ import annotations
+
+from datetime import datetime
+import hashlib
+
+from sqlalchemy.orm import Session
+
+from app.db.session import SessionLocal
+from app.db.social_models import SocialSource, ExtractedSignals, AIInferenceRun
+from app.db.models import Complaint, AuditLog
+from app.utils.social_platform import detect_platform
+
+from app.social.extractors.youtube import extract as extract_youtube
+
+
+def _db() -> Session:
+    return SessionLocal()
+
+
+def _sha256(s: str) -> str:
+    return hashlib.sha256((s or "").encode("utf-8", errors="ignore")).hexdigest()
+
+
+def process_social_source(social_source_id: int) -> None:
+    db = _db()
+    try:
+        ss = db.query(SocialSource).filter(SocialSource.id == social_source_id).first()
+        if not ss:
+            return
+
+        # status lifecycle
+        ss.status = "FETCHING"
+        db.commit()
+
+        platform = ss.platform or detect_platform(ss.url)
+
+        extracted_text = ""
+        transcript_text = None
+        meta = {"platform": platform, "url": ss.url}
+
+        # YouTube extraction (production baseline)
+        if platform == "youtube":
+            yt = extract_youtube(ss.url)
+
+            # Fill social_sources fields if present in ORM
+            if hasattr(ss, "platform_id"):
+                ss.platform_id = yt.get("platform_id")
+            if hasattr(ss, "canonical_url"):
+                ss.canonical_url = yt.get("canonical_url") or ss.url
+
+            meta.update({
+                "title": yt.get("title"),
+                "author_name": yt.get("author_name"),
+                "author_url": yt.get("author_url"),
+                "thumbnail_url": yt.get("thumbnail_url"),
+                "transcript_meta": yt.get("transcript_meta"),
+                "raw_oembed": yt.get("raw_oembed"),
+            })
+
+            extracted_text = (yt.get("title") or "").strip()
+            transcript_text = yt.get("transcript")
+
+        else:
+            extracted_text = f"Social link submitted: {ss.url}"
+
+        if hasattr(ss, "fetched_at"):
+            ss.fetched_at = datetime.utcnow()
+
+        combined = (extracted_text or "")
+        if transcript_text:
+            combined += "\n\n" + transcript_text
+
+        if hasattr(ss, "payload_hash"):
+            ss.payload_hash = _sha256(combined)
+
+        ss.status = "FETCHED"
+        db.commit()
+
+        # IMPORTANT: Upsert by social_source_id (no overwrite)
+        signals = (
+            db.query(ExtractedSignals)
+            .filter(ExtractedSignals.social_source_id == ss.id)
+            .first()
+        )
+
+        if not signals:
+            signals = ExtractedSignals(
+                complaint_id=ss.complaint_id,
+                social_source_id=ss.id,
+                post_text=extracted_text,
+                transcript=transcript_text,
+                ocr_text=None,
+                entities=None,
+                source_metadata=meta,
+            )
+            db.add(signals)
+        else:
+            signals.post_text = extracted_text
+            signals.transcript = transcript_text
+            signals.source_metadata = meta
+
+        # AI output stub (auditable; replace with real models next)
+        ai_output = {
+            "category": "General",
+            "priority": "Medium",
+            "summary": (combined[:500] + "...") if len(combined) > 500 else combined,
+            "rationale": "Extracted social evidence (title/transcript when available). ML classification will replace this output next.",
+            "signals": {
+                "platform": platform,
+                "has_transcript": bool(transcript_text),
+                "platform_id": getattr(ss, "platform_id", None),
+            },
+        }
+
+        confidence = 0.55
+        requires_review = 1
+
+        run = AIInferenceRun(
+            complaint_id=ss.complaint_id,
+            model_name="social_evidence_v1",
+            model_version="v1",
+            output=ai_output,
+            confidence=confidence,
+            requires_review=requires_review,
+        )
+        db.add(run)
+
+        c = db.query(Complaint).filter(Complaint.id == ss.complaint_id).first()
+        if c:
+            c.ai_category = ai_output["category"]
+            c.ai_priority = ai_output["priority"]
+            c.ai_confidence = confidence
+            c.ai_summary = ai_output["summary"]
+            c.ai_rationale = ai_output["rationale"]
+            c.status = "AI_PROPOSED"
+
+        db.add(
+            AuditLog(
+                actor_type="system",
+                actor_id=0,
+                action="social_processed",
+                entity_type="complaint",
+                entity_id=ss.complaint_id,
+                meta={"social_source_id": ss.id, "platform": platform},
+                ip=None,
+                user_agent="worker",
+            )
+        )
+
+        ss.status = "DONE"
+        db.commit()
+
+    except Exception as e:
+        try:
+            ss = db.query(SocialSource).filter(SocialSource.id == social_source_id).first()
+            if ss:
+                ss.status = "FAILED"
+                ss.error = str(e)
+                db.commit()
+        finally:
+            raise
+    finally:
+        db.close()

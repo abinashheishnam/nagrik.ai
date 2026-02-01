@@ -1,95 +1,99 @@
+from __future__ import annotations
+
 import re
+from typing import Tuple, List, Dict
 
-# Enhanced Rule-Based Classifier
-# Optimized for "99% Accuracy" mapping on requested categories
+from app.utils.labels import load_categories
 
-CATEGORY_KEYWORDS = {
-    "Life Threat": [
-        "kill", "murder", "death", "dead", "shoot", "gun", "bullet", "attack", 
-        "bomb", "blast", "explosion", "terror", "kidnap", "hostage", "rape", 
-        "assault", "bleeding", "critical", "dying", "suicide", "poison", "life danger"
+
+def _clean(text: str) -> str:
+    t = (text or "").lower()
+    t = re.sub(r"\s+", " ", t).strip()
+    return t
+
+
+# Extra keywords beyond categories.json (practical emergency boost)
+EXTRA_KEYWORDS: Dict[str, List[str]] = {
+    "emergency_disaster": [
+        "fire", "fire accident", "burning", "smoke", "blast", "explosion",
+        "ambulance", "injured", "injury", "bleeding", "unconscious", "critical",
+        "collapse", "building collapse", "gas leak", "electrocution", "shock",
+        "flood", "rescue", "help now", "life danger", "dying", "dead",
+        "murder", "shoot", "gun", "knife", "attack", "violence", "rape"
     ],
-    "Law & Order": [
-        "police", "theft", "robbery", "stolen", "crime", "criminal", "fight", 
-        "riot", "mob", "drug", "smuggling", "illegal", "harassment", "stalking", 
-        "brawl", "nuisance", "gambling", "trafficking", "trespass", "vandalism"
+    "public_safety_law": [
+        "police", "theft", "robbery", "crime", "harassment", "stalking",
+        "riot", "mob", "fight", "illegal", "smuggling", "trafficking"
     ],
-    "Corruption": [
-        "bribe", "bribery", "money", "commission", "scam", "fraud", "embezzlement", 
-        "official", "demand", "pay", "corruption", "dishonest", "unfair", "nepotism", 
-        "favoritism", "misuse"
+    "roads_transport": [
+        "pothole", "traffic jam", "signal not working", "bridge", "accident", "collision"
     ],
-    "Health": [
-        "hospital", "doctor", "ambulance", "medicine", "injury", "blood", "emergency", 
-        "fever", "dengue", "malaria", "sanitary", "food poisoning", "patient", "clinic"
+    "sanitation_waste": [
+        "garbage", "trash", "dumping", "bad smell", "waste burning"
     ],
-    "Water & Sanitation": [
-        "water", "drain", "sewage", "garbage", "waste", "toilet", "sanitation", "dirty", 
-        "smell", "overflow", "leakage", "contamination", "pipeline", "supply"
-    ],
-    "Electricity": [
-        "electric", "power", "outage", "voltage", "transformer", "current", "light off", 
-        "shock", "wire", "pole", "darkness", "load shedding"
-    ],
-    "Road & Transport": [
-        "road", "pothole", "traffic", "bus", "bridge", "accident", "transport", "jam", 
-        "signal", "parking", "highway", "collision"
-    ],
-    "Infrastructure": [
-        "streetlight", "street light", "lamp", "construction", "building", "broken", 
-        "repair", "park", "bench", "wall", "collapse", "encroachment"
-    ],
-    "Cybercrime": [
-        "hack", "hacked", "fraud", "scam", "phishing", "otp", "bank", "account", 
-        "online", "website", "money lost", "cyber", "bullying", "harassment", "fake"
-    ],
-    "Environment": [
-        "pollution", "smoke", "noise", "tree", "forest", "cutting", "garbage", 
-        "plastic", "river", "lake", "air", "quality", "dust", "animals"
-    ],
-    "Education": [
-        "school", "college", "teacher", "student", "exam", "books", "uniform", 
-        "fee", "fees", "admission", "class", "scholarship", "midday meal"
+    "drainage_flooding": [
+        "waterlogging", "sewage overflow", "blocked drain", "flooding after rain"
     ],
 }
 
-def _tokenize(text: str) -> list[str]:
-    # Improved tokenization
-    t = re.sub(r"[^a-zA-Z0-9\s]", " ", text.lower())
-    return [w for w in t.split() if w]
 
-def predict_category(title: str, description: str) -> tuple[str, float, list[str]]:
-    text = f"{title} {description}".strip()
-    tokens = _tokenize(text)
+def predict_category(title: str, description: str) -> Tuple[str, float, List[str]]:
+    """
+    Returns (category_id, confidence, keywords_found)
 
-    scores = {}
-    hits = {}
+    IMPORTANT:
+    - category_id MUST match categories.json IDs
+    - This is prototype/rule-based Phase-2 intelligence
+    """
+    cfg = load_categories()
+    categories = cfg.get("categories", [])
 
-    for cat, kws in CATEGORY_KEYWORDS.items():
-        s = 0
-        h = []
-        for kw in kws:
-            # Multi-word match or exact token match
-            if kw in text.lower(): 
-                # Weight matches based on length to favor specific phrases
-                weight = 2 if " " in kw else 1
-                s += weight
-                h.append(kw)
-        
-        if s:
-            scores[cat] = s
-            hits[cat] = sorted(set(h))
+    text = _clean(f"{title} {description}")
+    if not text:
+        return ("other", 0.2, [])
+
+    scores: Dict[str, int] = {}
+    hits: Dict[str, List[str]] = {}
+
+    for c in categories:
+        cid = c.get("id")
+        if not cid:
+            continue
+
+        # Start with keywords_hint from categories.json
+        kw_list = list(c.get("keywords_hint") or [])
+
+        # Add extra keywords (emergency boost, etc)
+        kw_list.extend(EXTRA_KEYWORDS.get(cid, []))
+
+        count = 0
+        found = []
+
+        for kw in kw_list:
+            k = _clean(str(kw))
+            if not k:
+                continue
+
+            # phrase weight: multi-word hits more important
+            if k in text:
+                count += 2 if " " in k else 1
+                found.append(k)
+
+        if count > 0:
+            scores[cid] = count
+            hits[cid] = sorted(set(found))
 
     if not scores:
-        return ("General Grievance", 0.45, [])
+        return ("other", 0.35, [])
 
-    best_cat = max(scores, key=scores.get)
-    best_score = scores[best_cat]
-    
-    # Calculate "Pseudo-99%" Confidence
-    # If we have multiple strong keyword matches, confidence approaches 0.99
-    # Saturation curve
-    conf = 0.50 + (min(best_score, 5) * 0.1) 
-    conf = min(0.99, conf)
+    # pick best
+    best_id = max(scores, key=scores.get)
+    best_score = scores[best_id]
 
-    return (best_cat, float(round(conf, 3)), hits.get(best_cat, []))
+    # Confidence heuristic
+    if best_id == "emergency_disaster":
+        conf = 0.93
+    else:
+        conf = min(0.90, 0.45 + 0.08 * min(best_score, 6))
+
+    return (best_id, round(conf, 3), hits.get(best_id, []))

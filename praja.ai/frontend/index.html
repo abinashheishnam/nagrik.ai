@@ -11,6 +11,8 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
     rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
   <style>
@@ -38,22 +40,67 @@
 
     body {
       margin: 0;
-      background-color: var(--gov-bg);
+      background: #f8fafc;
       color: var(--text-main);
       font-family: 'Plus Jakarta Sans', sans-serif;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Aesthetic blurry background blobs with floating animation */
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translate(0, 0);
+      }
+
+      50% {
+        transform: translate(30px, 30px);
+      }
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      top: -100px;
+      left: -100px;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.12) 0%, transparent 70%);
+      filter: blur(100px);
+      z-index: -10;
+      pointer-events: none;
+      animation: float 15s ease-in-out infinite;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      bottom: 10%;
+      right: -100px;
+      width: 700px;
+      height: 700px;
+      background: radial-gradient(circle, rgba(180, 83, 9, 0.08) 0%, transparent 70%);
+      filter: blur(120px);
+      z-index: -10;
+      pointer-events: none;
+      animation: float 20s ease-in-out infinite reverse;
     }
 
     /* --- Header --- */
     .gov-header {
-      background: #ffffff;
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(12px);
       height: 70px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 32px;
+      padding: 0 12px;
+      /* Content stays on leftmost and right most */
       border-bottom: 1px solid var(--border);
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
       z-index: 50;
@@ -134,10 +181,11 @@
       top: 52px;
       right: 0;
       width: 220px;
-      background: white;
-      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.4);
       border-radius: 12px;
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1);
       display: none;
       flex-direction: column;
       overflow: hidden;
@@ -199,7 +247,6 @@
       background: #fef2f2;
     }
 
-
     /* --- Hero / Main --- */
     .hero-container {
       flex: 1;
@@ -211,14 +258,14 @@
     }
 
     .report-widget {
-      background: #ffffff;
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(16px);
       width: 100%;
       max-width: 640px;
-      border-radius: 16px;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
-      border: 1px solid var(--border);
+      border-radius: 20px;
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.4);
       overflow: hidden;
-      animation: slideUp 0.4s ease-out;
     }
 
     .widget-header {
@@ -335,6 +382,35 @@
       justify-content: center;
       align-items: center;
       gap: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-submit::after {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -60%;
+      width: 20%;
+      height: 200%;
+      background: rgba(255, 255, 255, 0.2);
+      transform: rotate(30deg);
+      transition: none;
+      animation: buttonShine 4s infinite linear;
+    }
+
+    @keyframes buttonShine {
+      0% {
+        left: -60%;
+      }
+
+      20% {
+        left: 140%;
+      }
+
+      100% {
+        left: 140%;
+      }
     }
 
     .btn-submit:hover {
@@ -355,7 +431,6 @@
       padding: 16px;
       margin-top: 24px;
       display: none;
-      /* hidden by default */
       animation: fadeIn 0.3s;
     }
 
@@ -438,32 +513,69 @@
       font-weight: 900;
     }
 
-    .profile-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 12px 0;
+    /* Horizontal Tables & Grids */
+    .horizontal-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+      background: rgba(255, 255, 255, 0.4);
+      backdrop-filter: blur(8px);
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .horizontal-table th {
+      background: rgba(248, 250, 252, 0.8);
+      padding: 12px;
+      text-align: left;
+      font-size: 11px;
+      text-transform: uppercase;
+      color: var(--text-sub);
+      font-weight: 700;
       border-bottom: 1px solid var(--border);
     }
 
-    .profile-label {
+    .horizontal-table td {
+      padding: 14px 12px;
+      font-size: 14px;
       font-weight: 600;
-      color: var(--text-sub);
-      font-size: 13px;
-      text-transform: uppercase;
+      color: var(--gov-blue-dark);
+      border-bottom: 1px solid var(--border);
     }
 
-    .profile-val {
-      font-weight: 700;
-      color: var(--gov-blue-primary);
-      font-size: 15px;
+    .horizontal-table tr:last-child td {
+      border-bottom: none;
     }
 
-    /* Analysis Stats */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
+    .stats-horiz {
+      display: flex;
       gap: 12px;
       margin-top: 16px;
+    }
+
+    .stat-item-horiz {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.5);
+      padding: 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .stat-item-horiz .stat-val {
+      font-size: 22px;
+      font-weight: 800;
+    }
+
+    .stat-item-horiz .stat-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      color: var(--text-sub);
+      font-weight: 700;
     }
 
     .stat-card {
@@ -584,6 +696,24 @@
       background: radial-gradient(circle at 50% 0%, #1e293b 0%, var(--gov-bg) 60%);
     }
 
+    @keyframes shine {
+      0% {
+        background-position: -100% center;
+      }
+
+      100% {
+        background-position: 100% center;
+      }
+    }
+
+    .shine-effect {
+      background: linear-gradient(90deg, var(--gov-blue-primary) 0%, #3b82f6 20%, #ffffff 50%, #3b82f6 80%, var(--gov-blue-primary) 100%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shine 4s linear infinite;
+    }
 
     /* Toast */
     #toastContainer {
@@ -591,6 +721,9 @@
       bottom: 20px;
       right: 20px;
       z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
 
     @keyframes slideUp {
@@ -616,6 +749,131 @@
         transform: translateY(0);
       }
     }
+
+    /* --- Official Footer --- */
+    .gov-footer {
+      background-color: #232f3e;
+      color: #ffffff;
+      padding: 40px 0 0;
+      font-size: 14px;
+      margin-top: auto;
+    }
+
+    .footer-content {
+      max-width: 1000px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 40px;
+      padding-bottom: 40px;
+      border-bottom: 1px solid #3a4553;
+    }
+
+    .footer-col h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 14px;
+      color: #ffffff;
+    }
+
+    .footer-col ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .footer-col li {
+      margin-bottom: 10px;
+    }
+
+    .footer-col a {
+      color: #dddddd;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-col a:hover {
+      color: #ffffff;
+      text-decoration: underline;
+    }
+
+    .social-links {
+      display: flex;
+      gap: 16px;
+      margin-top: 10px;
+    }
+
+    .social-icon {
+      width: 24px;
+      height: 24px;
+      fill: #ffffff;
+      transition: fill 0.2s;
+    }
+
+    .social-icon:hover {
+      fill: var(--gov-blue-accent);
+    }
+
+    .footer-bottom {
+      background-color: #131a22;
+      padding: 24px;
+      text-align: center;
+      font-size: 12px;
+      color: #999;
+    }
+
+    .footer-bottom span {
+      margin: 0 10px;
+    }
+
+    @media (max-width: 768px) {
+      .footer-content {
+        grid-template-columns: 1fr;
+        text-align: center;
+        padding: 0 20px 40px;
+      }
+
+      .social-links {
+        justify-content: center;
+      }
+    }
+
+    /* Autocomplete Suggestions */
+    .suggestions-list {
+      position: absolute;
+      top: 70px;
+      left: 0;
+      width: 100%;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      z-index: 50;
+      max-height: 200px;
+      overflow-y: auto;
+      display: none;
+    }
+
+    .suggestions-list.active {
+      display: block;
+    }
+
+    .suggestion-item {
+      padding: 10px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      border-bottom: 1px solid #f1f5f9;
+      color: var(--text-main);
+    }
+
+    .suggestion-item:last-child {
+      border-bottom: none;
+    }
+
+    .suggestion-item:hover {
+      background: #eff6ff;
+      color: var(--gov-blue-primary);
+    }
   </style>
 </head>
 
@@ -625,12 +883,11 @@
     <div class="brand-section">
       <img src="assets/manipur_emblem.png" alt="Emblem" class="emblem">
       <div class="brand-text">
-        <div class="brand-title">Manipur Grievance Portal</div>
+        <div class="brand-title shine-effect">Manipur Grievance Portal</div>
         <div class="brand-subtitle">Government of Manipur</div>
       </div>
     </div>
 
-    <!-- Header Controls with Dropdown -->
     <div class="header-controls">
       <div class="user-menu-container">
         <div class="avatar-btn" id="avatarBtn" onclick="toggleMenu()">
@@ -644,7 +901,6 @@
           <div class="menu-item" onclick="openProfile()">
             <span>👤</span> My Profile
           </div>
-          <!-- Requested: Account Icon Analysis -->
           <div class="menu-item" onclick="openAnalysis()">
             <span>📈</span> Account Analysis
           </div>
@@ -662,8 +918,45 @@
     </div>
   </header>
 
+  <!-- Live Stats Bar -->
+  <div class="stats-bar slide-in-right delay-100">
+    <div class="stat-item">
+      <div class="stat-number" data-target-total data-target="1240">0</div>
+      <div class="stat-desc">Issues Reported</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" data-target-resolved data-target="850">0</div>
+      <div class="stat-desc">Resolved</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" data-target-avg data-target="24">0</div>
+      <div class="stat-desc">Avg Hours to Fix</div>
+    </div>
+  </div>
+
+  <!-- Social Intake Button (Floating Top Right relative to Hero or fixed) or just in Hero -->
+  <!-- We'll add it nicely in the hero container overlay or header controls -->
+
+  <div style="position:absolute; top:90px; right:32px; z-index:40;">
+    <a href="social.html" style="
+      background: rgba(255,255,255,0.9); 
+      backdrop-filter: blur(8px);
+      padding: 10px 20px; 
+      border-radius: 99px; 
+      text-decoration: none; 
+      color: var(--gov-blue-primary); 
+      font-weight: 700; 
+      font-size: 14px; 
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      display: flex; align-items: center; gap: 8px;
+      transition: transform 0.2s;
+    " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+      <span style="font-size:18px;">📱</span> Submit Social Link
+    </a>
+  </div>
+
   <div class="hero-container">
-    <div class="report-widget">
+    <div class="report-widget slide-in-right">
       <div class="widget-header">
         <h1 class="widget-title">File a Grievance</h1>
         <div class="widget-sub">Describe your issue. Our AI will analyze and route it instantly.</div>
@@ -674,20 +967,51 @@
         <div class="input-group">
           <label class="input-label">Issue Subject</label>
           <input type="text" id="title" placeholder="e.g. Broken streetlight on Main St" />
-          <button class="magic-btn" id="btnAIDraft">
+          <button type="button" id="btnAIDraft" class="magic-btn">
             <span>✨</span> AI Draft
           </button>
         </div>
 
         <div class="input-group">
           <label class="input-label">Location</label>
-          <input type="text" id="address" placeholder="Fetching location..." />
+          <input type="text" id="address" placeholder="Fetching location... Type to search..."
+            style="padding-right: 140px;" autocomplete="off" />
+          <div id="suggestionBox" class="suggestions-list"></div>
+          <div style="position: absolute; right: 10px; top: 32px; display: flex; gap: 6px; z-index: 5;">
+            <button type="button" id="btnSearchLoc" class="magic-btn" style="position: static; box-shadow: none;">
+              <span>🔍</span> Search
+            </button>
+            <button type="button" id="btnGPS" class="magic-btn"
+              style="position: static; box-shadow: none; background: #059669;" title="Use Current Location">
+              <span>🎯</span>
+            </button>
+          </div>
           <div id="locPill" class="loc-pill" style="display:none;">📍 Coordinates Detected</div>
+          <div id="map"
+            style="height: 200px; width: 100%; margin-top: 10px; border-radius: 8px; border: 1px solid var(--border); z-index: 1;">
+          </div>
         </div>
 
         <div class="input-group">
           <label class="input-label">Detailed Description</label>
           <textarea id="description" rows="5" placeholder="Provide more details about the incident..."></textarea>
+        </div>
+
+        <div class="input-group">
+          <label class="input-label">Live Audio Submission</label>
+          <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+            <button type="button" id="btnLiveAudioStart" class="btn-submit" style="width:auto; padding:12px 16px;">
+              🎙️ Start Live Audio
+            </button>
+            <button type="button" id="btnLiveAudioStop" class="btn-submit"
+              style="width:auto; padding:12px 16px; background:#334155;" disabled>
+              ⏹️ Stop
+            </button>
+            <div id="liveAudioStatus" style="font-size:13px; color:var(--text-sub); font-weight:600;">Idle</div>
+          </div>
+          <div style="margin-top:10px; font-size:12px; color:var(--text-sub); line-height:1.5;">
+            Tip: Speak your grievance. We’ll transcribe it and auto-generate a draft.
+          </div>
         </div>
 
         <div id="aiBox" class="ai-box">
@@ -701,7 +1025,9 @@
           <div style="font-size:13px; color:#334155; line-height:1.4;" id="aiSum"></div>
         </div>
 
-        <button id="btnSubmit" class="btn-submit">Submit Report</button>
+        <button type="button" id="btnSubmit" class="btn-submit">
+          Submit Report
+        </button>
 
       </div>
     </div>
@@ -712,45 +1038,49 @@
     <div class="modal-card">
       <button class="close-btn" onclick="closeModals()">×</button>
       <div class="modal-title">My Profile</div>
-      <div class="profile-row">
-        <div class="profile-label">Full Name</div>
-        <div class="profile-val" id="p-name">-</div>
-      </div>
-      <div class="profile-row">
-        <div class="profile-label">User ID</div>
-        <div class="profile-val" id="p-id">-</div>
-      </div>
-      <div class="profile-row">
-        <div class="profile-label">Phone Number</div>
-        <div class="profile-val" id="p-phone">-</div>
-      </div>
-      <div class="profile-row">
-        <div class="profile-label">Email Address</div>
-        <div class="profile-val" id="p-email">-</div>
-      </div>
+
+      <table class="horizontal-table">
+        <thead>
+          <tr>
+            <th>Full Name</th>
+            <th>User ID</th>
+            <th>Phone</th>
+            <th>Email</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td id="p-name">-</td>
+            <td id="p-id">-</td>
+            <td id="p-phone">-</td>
+            <td id="p-email">-</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 
   <!-- Analysis Modal -->
   <div class="modal-overlay" id="analysisModal">
-    <div class="modal-card">
+    <div class="modal-card" style="max-width: 600px;">
       <button class="close-btn" onclick="closeModals()">×</button>
       <div class="modal-title">Account Analysis</div>
-      <div style="text-align:center; margin-bottom:20px; color:var(--text-sub); font-size:14px;">
-        Overview of your reported grievances
+      <div style="text-align:left; margin-bottom:10px; color:var(--text-sub); font-size:13px; font-weight:600;">
+        Real-time metrics for your grievances:
       </div>
-      <div class="stats-grid">
-        <div class="stat-card">
+
+      <div class="stats-horiz">
+        <div class="stat-item-horiz">
           <div class="stat-val" id="s-total">0</div>
-          <div class="stat-label">Total</div>
+          <div class="stat-label">Total Reported</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-item-horiz">
           <div class="stat-val" id="s-pending" style="color:#f59e0b">0</div>
-          <div class="stat-label">Pending</div>
+          <div class="stat-label">Currently Pending</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-item-horiz">
           <div class="stat-val" id="s-solved" style="color:#16a34a">0</div>
-          <div class="stat-label">Resolved</div>
+          <div class="stat-label">Successfully Resolved</div>
         </div>
       </div>
       <div style="margin-top:24px; text-align:center;">
@@ -780,203 +1110,939 @@
     </div>
   </div>
 
-  <div id="toastContainer"></div>
+  <!-- How It Works Section -->
+  <div class="how-it-works fade-in-up">
+    <div class="hiw-title">How Praja.ai Works</div>
+    <div class="hiw-grid">
+      <div class="hiw-card">
+        <div class="hiw-icon"></div>
+        <div class="hiw-content">
+          <div class="hiw-step-title">1. Report</div>
+          <div class="hiw-step-desc">Take a photo or record audio describing the issue. Our AI automatically tags the
+            location.</div>
+        </div>
+      </div>
+      <div class="hiw-card delay-100">
+        <div class="hiw-icon"></div>
+        <div class="hiw-content">
+          <div class="hiw-step-title">2. Analyze</div>
+          <div class="hiw-step-desc">AI categorizes the problem, assesses severity, and routes it to the correct
+            department instantly.</div>
+        </div>
+      </div>
+      <div class="hiw-card delay-200">
+        <div class="hiw-icon"></div>
+        <div class="hiw-content">
+          <div class="hiw-step-title">3. Resolve</div>
+          <div class="hiw-step-desc">Authorities take action. You receive real-time updates until the issue is fixed.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  <script>
-    const API = "http://127.0.0.1:8000";
-    const token = localStorage.getItem("USER_TOKEN");
-    let lat = null, lng = null;
-    let currentUser = null;
+  <!-- Live Ticker -->
+  <div class="ticker-wrap">
+    <div class="ticker" id="activityTicker">
+      <div class="ticker-item">Initializing live feed...</div>
+    </div>
 
-    if (!token) window.location.href = "user_login.html";
 
-    // --- Data Fetching ---
-    async function initUser() {
-      try {
-        // 1. Fetch Profile
-        const res = await fetch(`${API}/auth/me`, {
-          headers: { "Authorization": `Bearer ${token}` }
-        });
-        if (!res.ok) throw new Error("Auth failed");
-        currentUser = await res.json();
 
-        // Update UI
-        document.getElementById("menuUserName").innerText = currentUser.full_name;
-        document.getElementById("userInitials").innerText = currentUser.full_name.charAt(0).toUpperCase();
 
-        // Populate Modal
-        document.getElementById("p-name").innerText = currentUser.full_name;
-        document.getElementById("p-id").innerText = `#${currentUser.id}`; // User ID
-        document.getElementById("p-phone").innerText = currentUser.phone;
-        document.getElementById("p-email").innerText = currentUser.email || "Not Linked";
+    <div id="toastContainer"></div>
 
-        // 2. Fetch Stats for Analysis
-        const complaintsRes = await fetch(`${API}/api/v1/complaints/my`, {
-          headers: { "Authorization": `Bearer ${token}` }
-        });
-        const complaints = await complaintsRes.json();
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-        const total = complaints.length;
-        const resolved = complaints.filter(c => c.status === "Resolved").length;
-        const pending = total - resolved;
+    <script>
+      // =========================
+      // CONFIG
+      // =========================
+      const API_ROOT = "http://127.0.0.1:8000";
+      const token = localStorage.getItem("USER_TOKEN") || sessionStorage.getItem("USER_TOKEN");
+      const role = localStorage.getItem("ROLE") || sessionStorage.getItem("ROLE");
 
-        document.getElementById("s-total").innerText = total;
-        document.getElementById("s-pending").innerText = pending;
-        document.getElementById("s-solved").innerText = resolved;
-
-      } catch (e) {
-        console.error(e);
-        // In a real app we might redirect to login, but for dev we settle.
+      // ✅ Guard: only logged-in citizens can access
+      if (!token || role !== "user") {
+        window.location.href = "user_login.html";
       }
-    }
 
-    // --- Modal Logic ---
-    function toggleMenu() {
-      document.getElementById("userMenu").classList.toggle("active");
-    }
+      // NOTE:
+      // - /auth/me is mounted without /api/v1 in your main.py (auth_router has no prefix)
+      // - complaints are under /api/v1/complaints
+      // - live audio transcribe is under /api/v1/audio/transcribe (audio_live.py mounted inside v1 router)
+      // - ai draft route depends on your backend: we'll try /api/v1/ai/draft first, then /ai/draft fallback.
+      const ENDPOINTS = {
+        me: `${API_ROOT}/auth/me`,
+        myComplaints: `${API_ROOT}/api/v1/complaints/my`,
+        createComplaint: `${API_ROOT}/api/v1/complaints`,
+        sttTranscribe: `${API_ROOT}/api/v1/audio/transcribe`,
+        aiDraftPrimary: `${API_ROOT}/api/v1/ai/draft`,
+        aiDraftFallback: `${API_ROOT}/ai/draft`,
+      };
 
-    document.addEventListener("click", function (e) {
-      if (!e.target.closest(".user-menu-container")) {
-        document.getElementById("userMenu").classList.remove("active");
+      if (!token) window.location.href = "user_login.html";
+
+      let lat = null, lng = null;
+      let currentUser = null;
+      let currentAudioBlob = null; // New: store recorded audio for submission
+
+      // =========================
+      // TOAST
+      // =========================
+      function showToast(msg, type) {
+        const t = document.createElement("div");
+        t.style.cssText = `
+        background:#1e293b; color:white; padding:12px 18px; border-radius:10px;
+        box-shadow:0 10px 15px -3px rgba(0,0,0,0.12); font-size:14px;
+        animation:fadeIn 0.25s; max-width: 340px;
+      `;
+        if (type === "err") t.style.background = "#b91c1c";
+        if (type === "success") t.style.background = "#15803d";
+        if (type === "warn") t.style.background = "#eab308";
+        t.innerText = msg;
+        document.getElementById("toastContainer").appendChild(t);
+        setTimeout(() => t.remove(), 3200);
       }
-    });
 
-    function closeModals() {
-      document.querySelectorAll('.modal-overlay').forEach(el => el.classList.remove('active'));
-    }
+      function setLiveStatus(msg) {
+        const el = document.getElementById("liveAudioStatus");
+        if (el) el.innerText = msg;
+      }
 
-    function openProfile() { closeModals(); document.getElementById("profileModal").classList.add("active"); }
-    function openAnalysis() { closeModals(); document.getElementById("analysisModal").classList.add("active"); }
-    function openSettings() { closeModals(); document.getElementById("settingsModal").classList.add("active"); }
+      function showAI(ai) {
+        if (!ai) return;
+        document.getElementById("aiBox").style.display = "block";
+        document.getElementById("aiCat").innerText = `Cat: ${ai.ai_category ?? "-"}`;
+        document.getElementById("aiPri").innerText = `Pri: ${ai.ai_priority ?? "-"}`;
+        const conf = typeof ai.ai_confidence === "number" ? Math.round(ai.ai_confidence * 100) : "-";
+        document.getElementById("aiConf").innerText = `Conf: ${conf === "-" ? "-" : conf + "%"}`;
+        document.getElementById("aiSum").innerText = ai.ai_summary ?? "";
+      }
 
-    // --- Dark Mode ---
-    const savedTheme = localStorage.getItem("theme");
-    const toggle = document.getElementById("darkModeToggle");
+      // =========================
+      // MENU / MODALS
+      // =========================
+      window.toggleMenu = function () {
+        document.getElementById("userMenu").classList.toggle("active");
+      };
 
-    if (savedTheme === "dark") {
-      document.body.classList.add("dark-mode");
-      toggle.checked = true;
-    }
+      document.addEventListener("click", function (e) {
+        if (!e.target.closest(".user-menu-container")) {
+          const m = document.getElementById("userMenu");
+          if (m) m.classList.remove("active");
+        }
+      });
 
-    toggle.addEventListener("change", (e) => {
-      if (e.target.checked) {
+      window.closeModals = function () {
+        document.querySelectorAll('.modal-overlay').forEach(el => el.classList.remove('active'));
+      };
+
+      window.openProfile = function () { closeModals(); document.getElementById("profileModal").classList.add("active"); };
+      window.openAnalysis = function () { closeModals(); document.getElementById("analysisModal").classList.add("active"); };
+      window.openSettings = function () { closeModals(); document.getElementById("settingsModal").classList.add("active"); };
+
+      // =========================
+      // DARK MODE
+      // =========================
+      const savedTheme = localStorage.getItem("theme");
+      const toggle = document.getElementById("darkModeToggle");
+      if (savedTheme === "dark") {
         document.body.classList.add("dark-mode");
-        localStorage.setItem("theme", "dark");
-      } else {
-        document.body.classList.remove("dark-mode");
-        localStorage.setItem("theme", "light");
+        if (toggle) toggle.checked = true;
       }
-    });
+      if (toggle) {
+        toggle.addEventListener("change", (e) => {
+          if (e.target.checked) {
+            document.body.classList.add("dark-mode");
+            localStorage.setItem("theme", "dark");
+          } else {
+            document.body.classList.remove("dark-mode");
+            localStorage.setItem("theme", "light");
+          }
+        });
+      }
 
+      // =========================
+      // USER INIT + KPI
+      // =========================
+      async function initUser() {
+        try {
+          const res = await fetch(ENDPOINTS.me, {
+            headers: { "Authorization": `Bearer ${token}` }
+          });
+          if (!res.ok) throw new Error("Auth failed");
+          currentUser = await res.json();
 
-    // --- Core Logic ---
-    window.addEventListener("load", () => {
-      initUser(); // Load User Data
+          document.getElementById("menuUserName").innerText = currentUser.full_name || "User";
+          document.getElementById("userInitials").innerText = (currentUser.full_name || "U").charAt(0).toUpperCase();
 
-      if ("geolocation" in navigator) {
+          document.getElementById("p-name").innerText = currentUser.full_name || "-";
+          document.getElementById("p-id").innerText = currentUser.id ? `#${currentUser.id}` : "-";
+          document.getElementById("p-phone").innerText = currentUser.phone || "-";
+          document.getElementById("p-email").innerText = currentUser.email || "Not Linked";
+
+          const complaintsRes = await fetch(ENDPOINTS.myComplaints, {
+            headers: { "Authorization": `Bearer ${token}` }
+          });
+
+          if (!complaintsRes.ok) return;
+
+          const complaints = await complaintsRes.json();
+          const total = Array.isArray(complaints) ? complaints.length : 0;
+          const resolved = Array.isArray(complaints) ? complaints.filter(c => c.status === "Resolved").length : 0;
+          const pending = total - resolved;
+
+          document.getElementById("s-total").innerText = total;
+          document.getElementById("s-pending").innerText = pending;
+          document.getElementById("s-solved").innerText = resolved;
+
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      // =========================
+      // MAP + LOCATION
+      // =========================
+      let map = null;
+      let marker = null;
+
+      function initMap() {
+        map = L.map('map', { zoomControl: true, doubleClickZoom: false }).setView([24.817, 93.936], 10);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenStreetMap'
+        }).addTo(map);
+
+        map.on('dblclick', async (e) => {
+          lat = e.latlng.lat;
+          lng = e.latlng.lng;
+          setMapMarker(lat, lng, "Pinned Location");
+
+          const pill = document.getElementById("locPill");
+          if (pill) {
+            pill.style.display = "inline-flex";
+            pill.innerText = "📍 Pin Dropped";
+          }
+
+          document.getElementById("address").value = "Loading location...";
+          await reverseGeocode(lat, lng);
+        });
+      }
+
+      async function reverseGeocode(_lat, _lng) {
+        try {
+          const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${_lat}&lon=${_lng}`);
+          const d = await r.json();
+          if (d.display_name) document.getElementById("address").value = d.display_name;
+        } catch { }
+      }
+
+      function setMapMarker(_lat, _lng, label) {
+        if (!map) return;
+        if (marker) marker.remove();
+        marker = L.marker([_lat, _lng]).addTo(map);
+        if (label) marker.bindPopup(label).openPopup();
+        map.setView([_lat, _lng], 15);
+      }
+
+      async function initLocation(manual = false) {
+        if (!("geolocation" in navigator)) {
+          if (manual) showToast("Geolocation not supported", "err");
+          return;
+        }
+
+        if (manual) showToast("Requesting location...", "warn");
+
         navigator.geolocation.getCurrentPosition(
           async (pos) => {
             lat = pos.coords.latitude;
             lng = pos.coords.longitude;
-            document.getElementById("locPill").style.display = "inline-flex";
+
+            const pill = document.getElementById("locPill");
+            if (pill) {
+              pill.style.display = "inline-flex";
+              pill.innerText = "📍 GPS Detected";
+            }
+
+            setMapMarker(lat, lng, "Current Location");
+            if (manual) showToast("Location found!", "success");
+
             try {
               const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);
               const d = await r.json();
               if (d.display_name) document.getElementById("address").value = d.display_name;
-            } catch (e) { }
+            } catch { }
           },
-          (err) => { console.warn("Loc denied"); }
+          (err) => {
+            console.warn("Loc error:", err);
+            let msg = "Location detection failed.";
+            if (err.code === 1) msg = "Location permission denied.";
+            if (err.code === 2) msg = "Location unavailable.";
+            if (err.code === 3) msg = "Location timeout.";
+
+            if (manual) showToast(msg + " Check browser settings.", "err");
+          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
         );
       }
-    });
 
-    document.getElementById("btnAIDraft").addEventListener("click", async () => {
-      const title = document.getElementById("title").value;
-      const addr = document.getElementById("address").value;
-      if (title.length < 3) return showToast("Please enter a subject first", "warn");
+      document.getElementById("btnGPS").addEventListener("click", () => initLocation(true));
 
-      const btn = document.getElementById("btnAIDraft");
-      btn.innerHTML = "⏳ Generating...";
+      async function searchLocation() {
+        const q = document.getElementById("address").value;
+        if (!q || q.length < 3) return showToast("Enter address to search", "warn");
 
-      try {
-        const res = await fetch(`${API}/api/v1/ai/draft`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-          body: JSON.stringify({ title, address: addr })
-        });
-        const data = await res.json();
-        document.getElementById("description").value = data.generated_description;
-        showAI(data.ai);
-        showToast("AI Draft Generated!", "success");
-      } catch (e) { showToast("AI Failed", "err"); }
-      finally { btn.innerHTML = "✨ AI Draft"; }
-    });
+        const btn = document.getElementById("btnSearchLoc");
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = "<span>⏳</span> ...";
 
-    document.getElementById("btnSubmit").addEventListener("click", async () => {
-      const title = document.getElementById("title").value;
-      let desc = document.getElementById("description").value;
-      const address = document.getElementById("address").value;
+        try {
+          const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}`);
+          const data = await r.json();
 
-      if (!title || title.length < 3) return showToast("Subject required", "err");
+          if (data && data.length > 0) {
+            const first = data[0];
+            lat = parseFloat(first.lat);
+            lng = parseFloat(first.lon);
 
-      const btn = document.getElementById("btnSubmit");
-      btn.innerText = "Submitting...";
-      btn.disabled = true;
+            setMapMarker(lat, lng, first.display_name);
 
-      try {
-        if (!desc) {
-          const draftRes = await fetch(`${API}/api/v1/ai/draft`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-            body: JSON.stringify({ title, address })
-          });
-          const draft = await draftRes.json();
-          desc = draft.generated_description;
-          document.getElementById("description").value = desc;
+            const pill = document.getElementById("locPill");
+            if (pill) {
+              pill.style.display = "inline-flex";
+              pill.innerText = "📍 Location Pinned";
+            }
+            showToast("Location updated", "success");
+          } else {
+            showToast("Address not found", "err");
+          }
+        } catch (e) {
+          console.error(e);
+          showToast("Search failed", "err");
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+        }
+      }
+
+      document.getElementById("btnSearchLoc").addEventListener("click", () => searchLocation());
+
+      // --- Autocomplete ---
+      let debounceTimer;
+      const addressInput = document.getElementById("address");
+      const suggestionBox = document.getElementById("suggestionBox");
+
+      addressInput.addEventListener("input", (e) => {
+        clearTimeout(debounceTimer);
+        const val = e.target.value.trim();
+
+        if (val.length < 3) {
+          suggestionBox.classList.remove("active");
+          suggestionBox.innerHTML = "";
+          return;
         }
 
-        const res = await fetch(`${API}/api/v1/complaints`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-          body: JSON.stringify({ title, description: desc, address, latitude: lat, longitude: lng })
+        debounceTimer = setTimeout(async () => {
+          try {
+            const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(val)}`);
+            const data = await r.json();
+
+            if (data && data.length > 0) {
+              suggestionBox.innerHTML = "";
+              data.forEach(place => {
+                const div = document.createElement("div");
+                div.className = "suggestion-item";
+                div.innerText = place.display_name;
+                div.onclick = () => {
+                  addressInput.value = place.display_name;
+                  lat = parseFloat(place.lat);
+                  lng = parseFloat(place.lon);
+                  setMapMarker(lat, lng, place.display_name);
+                  suggestionBox.classList.remove("active");
+
+                  const pill = document.getElementById("locPill");
+                  if (pill) {
+                    pill.style.display = "inline-flex";
+                    pill.innerText = "📍 Location Pinned";
+                  }
+                };
+                suggestionBox.appendChild(div);
+              });
+              suggestionBox.classList.add("active");
+            } else {
+              suggestionBox.classList.remove("active");
+            }
+          } catch (e) { console.error(e); }
+        }, 500);
+      });
+
+      // Hide suggestions on click outside
+      document.addEventListener("click", (e) => {
+        if (!suggestionBox.contains(e.target) && e.target !== addressInput) {
+          suggestionBox.classList.remove("active");
+        }
+      });
+
+      // =========================
+      // AI DRAFT
+      // =========================
+      async function callAIDraft(payload) {
+        // try /api/v1/ai/draft, then fallback /ai/draft
+        const tryCall = async (url) => {
+          const res = await fetch(url, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify(payload)
+          });
+          const raw = await res.text();
+          if (!res.ok) throw new Error(raw || `AI draft failed (${res.status})`);
+          return JSON.parse(raw);
+        };
+
+        try {
+          return await tryCall(ENDPOINTS.aiDraftPrimary);
+        } catch (e1) {
+          return await tryCall(ENDPOINTS.aiDraftFallback);
+        }
+      }
+
+      async function generateAIDraft(inputTitle, inputAddr) {
+        if (!inputTitle || inputTitle.length < 3) {
+          showToast("Subject too short for AI Draft", "warn");
+          return;
+        }
+
+        const btn = document.getElementById("btnAIDraft");
+        if (btn) {
+          btn.disabled = true;
+          btn.innerHTML = "⏳ Generating...";
+        }
+
+        try {
+          const data = await callAIDraft({
+            title: inputTitle,
+            address: inputAddr || "",
+            latitude: lat,
+            longitude: lng
+          });
+
+          if (data.generated_description) document.getElementById("description").value = data.generated_description;
+          if (data.ai) showAI(data.ai);
+
+          showToast("AI Draft Generated!", "success");
+        } catch (err) {
+          console.error("VOICE ERROR:", err);
+          setLiveStatus("Failed ❌");
+          showToast("Voice processing failed. Check console + /audio/transcribe response.", "err");
+        } finally {
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = "<span>✨</span> AI Draft";
+          }
+        }
+      }
+
+      document.getElementById("btnAIDraft").addEventListener("click", async (e) => {
+        e.preventDefault();
+        const title = document.getElementById("title").value.trim();
+        const addr = document.getElementById("address").value.trim();
+        await generateAIDraft(title, addr);
+      });
+
+      // =========================
+      // SUBMIT COMPLAINT
+      // =========================
+      document.getElementById("btnSubmit").addEventListener("click", async (e) => {
+        e.preventDefault();
+
+        const title = document.getElementById("title").value.trim();
+        let desc = document.getElementById("description").value.trim();
+        const address = document.getElementById("address").value.trim();
+
+        if (!title || title.length < 3) return showToast("Subject required", "err");
+
+        const btn = document.getElementById("btnSubmit");
+        btn.innerText = "Submitting...";
+        btn.disabled = true;
+
+        try {
+          if (!desc) {
+            // fallback: request draft if desc empty
+            const draft = await callAIDraft({ title, address, latitude: lat, longitude: lng });
+            desc = (draft.generated_description || "").trim();
+            if (desc) document.getElementById("description").value = desc;
+          }
+
+          const res = await fetch(ENDPOINTS.createComplaint, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({ title, description: desc || title, address, latitude: lat, longitude: lng })
+          });
+
+          const complaint = await res.json();
+          if (!res.ok) throw new Error(complaint.detail || "Failed");
+
+          // Upload audio evidence if recorded
+          if (currentAudioBlob) {
+            try {
+              showToast("Uploading audio evidence...", "info");
+              await uploadComplaintAudioEvidence(complaint.id, currentAudioBlob);
+            } catch (ae) {
+              console.error("Audio upload error:", ae);
+              // Don't block the user, just log it
+            }
+          }
+
+          showToast("Report Submitted Successfully!", "success");
+          setTimeout(() => window.location.href = "user_dashboard.html", 1200);
+
+        } catch (err) {
+          console.error(err);
+          showToast("Submission Failed", "err");
+          btn.innerText = "Submit Report";
+          btn.disabled = false;
+        }
+      });
+
+      // =========================
+      // LOGOUT
+      // =========================
+      document.getElementById("btnLogout").addEventListener("click", (e) => {
+        e.preventDefault();
+        localStorage.removeItem("USER_TOKEN");
+        localStorage.removeItem("ROLE");
+        sessionStorage.removeItem("USER_TOKEN");
+        sessionStorage.removeItem("ROLE");
+        window.location.href = "user_login.html";
+
+      });
+
+      // =========================
+      // LIVE AUDIO (HARDENED)
+      // =========================
+      const liveStartBtn = document.getElementById("btnLiveAudioStart");
+      const liveStopBtn = document.getElementById("btnLiveAudioStop");
+
+      let liveRecorder = null;
+      let liveChunks = [];
+      let liveStream = null;
+
+      function safeEnable(el, val) { if (el) el.disabled = !val; }
+      function safeDisable(el, val) { if (el) el.disabled = !!val; }
+
+      async function startLiveAudio(e) {
+        if (e) e.preventDefault();
+
+        try {
+          if (!("mediaDevices" in navigator) || !navigator.mediaDevices.getUserMedia) {
+            showToast("Browser doesn't support mic recording", "err");
+            setLiveStatus("Unsupported ❌");
+            return;
+          }
+
+          liveStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          liveChunks = [];
+
+          // pick best supported mime
+          const mimeCandidates = [
+            "audio/webm;codecs=opus",
+            "audio/webm",
+            "audio/ogg;codecs=opus",
+            "audio/ogg",
+          ];
+
+          let chosenMime = "";
+          for (const m of mimeCandidates) {
+            if (window.MediaRecorder && MediaRecorder.isTypeSupported(m)) {
+              chosenMime = m;
+              break;
+            }
+          }
+
+          liveRecorder = new MediaRecorder(liveStream, chosenMime ? { mimeType: chosenMime } : undefined);
+
+          liveRecorder.ondataavailable = (ev) => {
+            if (ev.data && ev.data.size > 0) liveChunks.push(ev.data);
+          };
+
+          liveRecorder.onerror = (ev) => {
+            console.error("MediaRecorder error:", ev);
+            setLiveStatus("Recorder error ❌");
+            showToast("Recorder error", "err");
+          };
+
+          liveRecorder.onstop = async () => {
+            try {
+              // stop mic tracks
+              if (liveStream) liveStream.getTracks().forEach(t => t.stop());
+
+              const usedType = chosenMime || "audio/webm";
+              const blob = new Blob(liveChunks, { type: usedType });
+              currentAudioBlob = blob; // Save for submission
+
+              if (!blob.size) {
+                setLiveStatus("No audio captured ⚠️");
+                showToast("No audio captured. Speak closer + try again.", "warn");
+                return;
+              }
+
+              // 🔥 DEBUG: show size/type
+              console.log("Audio blob:", { type: usedType, bytes: blob.size });
+
+              const fd = new FormData();
+              const ext = usedType.includes("ogg") ? "ogg" : "webm";
+              fd.append("file", blob, `voice.${ext}`);
+
+              setLiveStatus("Uploading… ⏫");
+
+              const res = await fetch(ENDPOINTS.sttTranscribe, {
+                method: "POST",
+                headers: { "Authorization": `Bearer ${token}` },
+                body: fd
+              });
+
+              const raw = await res.text();
+              console.log("STT raw:", raw);
+
+              let data;
+              try { data = JSON.parse(raw); }
+              catch { data = { text: "" }; }
+
+              if (!res.ok) {
+                const msg = (data && (data.detail || data.message)) ? (data.detail || data.message) : raw || "STT failed";
+                setLiveStatus("Failed ❌");
+                showToast(msg, "err");
+                return;
+              }
+
+              const transcript = String((data && data.text) || "").trim();
+
+              if (!transcript) {
+                setLiveStatus("No speech detected ⚠️");
+                showToast("STT returned empty text. Speak louder + retry.", "warn");
+                return;
+              }
+
+              // Put transcript into title
+              document.getElementById("title").value = transcript;
+
+              setLiveStatus("Drafting… ✨");
+              const addr = document.getElementById("address").value;
+              await generateAIDraft(transcript, addr);
+
+              setLiveStatus("Done ✅");
+              showToast("Draft generated — review & submit.", "success");
+
+            } catch (err) {
+              console.error("Live audio pipeline error:", err);
+              setLiveStatus("Failed ❌");
+              showToast("Voice processing failed (check console for details)", "err");
+            } finally {
+              safeEnable(liveStartBtn, true);
+              safeDisable(liveStopBtn, true);
+            }
+          };
+
+          liveRecorder.start(); // no timeslice; more stable
+          setLiveStatus("Recording… 🎙️");
+          showToast("Recording started", "success");
+
+          safeDisable(liveStartBtn, true);
+          safeEnable(liveStopBtn, true);
+
+        } catch (err) {
+          console.error(err);
+          setLiveStatus("Mic denied ❌");
+          showToast("Mic permission denied", "err");
+          safeEnable(liveStartBtn, true);
+          safeDisable(liveStopBtn, true);
+        }
+      }
+
+      function stopLiveAudio(e) {
+        if (e) e.preventDefault();
+        try {
+          if (liveRecorder && liveRecorder.state !== "inactive") {
+            setLiveStatus("Stopping…");
+            liveRecorder.stop();
+          }
+        } catch (err) {
+          console.error(err);
+          setLiveStatus("Failed ❌");
+          showToast("Stop failed", "err");
+          safeEnable(liveStartBtn, true);
+          safeDisable(liveStopBtn, true);
+        }
+      }
+
+      if (liveStartBtn) liveStartBtn.addEventListener("click", startLiveAudio);
+      if (liveStopBtn) liveStopBtn.addEventListener("click", stopLiveAudio);
+
+
+
+      // =========================
+      // BOOT
+      // =========================
+      window.addEventListener("load", () => {
+        initMap();
+        initUser();
+        initLocation();
+      });
+      // =========================
+      // SAFE UI SOUND (no autoplay, never crashes)
+      // =========================
+      (function () {
+        const btn = document.getElementById("soundToggle");
+        const audio = document.getElementById("uiSound");
+        if (!btn || !audio) return;
+
+        let enabled = (localStorage.getItem("SOUND_ENABLED") === "1");
+
+        function render() {
+          btn.textContent = enabled ? "🔊 Sound ON" : "🔇 Enable sound";
+        }
+
+        async function unlock() {
+          try {
+            audio.volume = 0.6;
+            audio.currentTime = 0;
+            await audio.play();
+            audio.pause();
+            audio.currentTime = 0;
+            return true;
+          } catch {
+            return false;
+          }
+        }
+
+        btn.addEventListener("click", async () => {
+          if (!enabled) {
+            const ok = await unlock();
+            if (!ok) {
+              alert("Sound is blocked by browser. Tap again or allow site sound permissions.");
+              return;
+            }
+            enabled = true;
+            localStorage.setItem("SOUND_ENABLED", "1");
+            render();
+            try { audio.currentTime = 0; await audio.play(); } catch { }
+            return;
+          }
+          enabled = false;
+          localStorage.setItem("SOUND_ENABLED", "0");
+          render();
         });
 
-        if (res.ok) {
-          showToast("Report Submitted Successfully!", "success");
-          setTimeout(() => window.location.href = "user_dashboard.html", 1500);
-        } else { throw new Error("Failed"); }
-      } catch (e) {
-        showToast("Submission Failed", "err");
-        btn.innerText = "Submit Report";
-        btn.disabled = false;
+        window.playUISound = async () => {
+          if (!enabled) return;
+          try { audio.currentTime = 0; await audio.play(); } catch { }
+        };
+
+        render();
+      })();
+      const API = "http://127.0.0.1:8000/api/v1";
+
+      /**
+       * Uploads an audio file/blob to complaint evidence
+       * @param {number} complaintId
+       * @param {Blob|File} audioBlob
+       * @param {string} filename
+       */
+      async function uploadComplaintAudioEvidence(complaintId, audioBlob, filename = "complaint.wav") {
+        const fd = new FormData();
+
+        // Force correct filename + mime when possible
+        const mime = audioBlob.type && audioBlob.type !== "" ? audioBlob.type : "audio/wav";
+        const file = audioBlob instanceof File ? audioBlob : new File([audioBlob], filename, { type: mime });
+
+        fd.append("file", file);
+
+        const r = await fetch(`${API}/evidence/complaints/${complaintId}/audio`, {
+          method: "POST",
+          body: fd
+        });
+
+        if (!r.ok) {
+          const t = await r.text();
+          throw new Error(`Audio evidence upload failed: ${r.status} ${t}`);
+        }
+
+        return await r.json();
       }
-    });
+    </script>
+    <button id="soundToggle"
+      style="position:fixed; bottom:18px; left:18px; z-index:9999; padding:10px 14px; border-radius:10px; border:1px solid #e2e8f0; background:#fff; font-weight:700; cursor:pointer;">
+      🔇 Enable sound
+    </button>
 
-    document.getElementById("btnLogout").addEventListener("click", () => {
-      localStorage.removeItem("USER_TOKEN");
-      window.location.href = "user_login.html";
-    });
+    <audio id="uiSound" preload="auto">
+      <source src="assets/ui.mp3" type="audio/mpeg">
+    </audio>
 
-    function showAI(ai) {
-      document.getElementById("aiBox").style.display = "block";
-      document.getElementById("aiCat").innerText = `Cat: ${ai.ai_category}`;
-      document.getElementById("aiPri").innerText = `Pri: ${ai.ai_priority}`;
-      document.getElementById("aiConf").innerText = `Conf: ${Math.round(ai.ai_confidence * 100)}%`;
-      document.getElementById("aiSum").innerText = ai.ai_summary;
-    }
+    <!-- WhatsApp Floating Button -->
+    <div class="whatsapp-container"
+      style="position:fixed; bottom:24px; right:24px; z-index:9999; display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
+      <div class="whatsapp-code pulse"
+        style="background:white; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:700; color:#0f172a; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
+        Code: <span style="color:var(--gov-blue-primary); user-select:text;">join nearby-could</span>
+      </div>
+      <a href="https://wa.me/14155238886" target="_blank" class="whatsapp-float pulse" title="Chat on WhatsApp"
+        style="position:static; transform:none;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="#ffffff">
+          <path
+            d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 4.197 1.213 4.42c.149.224 2.095 3.195 5.076 4.475 2.982 1.28 2.982.854 3.526.805.544-.049 1.758-.718 2.006-1.413.248-.695.248-1.29.173-1.414z" />
+        </svg>
+        <span style="font-weight:700; font-size:14px;">Chat with AI</span>
+      </a>
+    </div>
 
-    function showToast(msg, type) {
-      const t = document.createElement("div");
-      t.style.cssText = `background:#1e293b; color:white; padding:12px 24px; border-radius:8px; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1); margin-top:10px; font-size:14px; animation:fadeIn 0.3s;`;
-      if (type === "err") t.style.background = "#b91c1c";
-      if (type === "success") t.style.background = "#15803d";
-      if (type === "warn") t.style.background = "#eab308";
-      t.innerText = msg;
-      document.getElementById("toastContainer").appendChild(t);
-      setTimeout(() => t.remove(), 3000);
-    }
-  </script>
+    <script>
+      // --- Stats Animation ---
+      // --- Stats Animation ---
+      async function initStats() {
+        try {
+          const r = await fetch(`${API}/analytics/public`);
+          if (r.ok) {
+            const d = await r.json();
+            const t = document.querySelector('[data-target-total]');
+            const res = document.querySelector('[data-target-resolved]');
+            const avg = document.querySelector('[data-target-avg]');
 
+            if (t) t.setAttribute('data-target', d.total_reports || 0);
+            if (res) res.setAttribute('data-target', d.resolved_cases || 0);
+            if (avg) avg.setAttribute('data-target', d.avg_hours || 24);
+          }
+        } catch (e) {
+          console.error("Stats fetch failed", e);
+        }
+
+        const stats = document.querySelectorAll('.stat-number');
+        stats.forEach(stat => {
+          const target = +stat.getAttribute('data-target');
+          if (!target) return; // avoid 0 or nan issues
+
+          const inc = Math.max(1, target / 50); // faster
+          let count = 0;
+
+          const updateCount = () => {
+            count += inc;
+            if (count < target) {
+              stat.innerText = Math.ceil(count);
+              requestAnimationFrame(updateCount);
+            } else {
+              stat.innerText = target;
+            }
+          };
+          updateCount();
+        });
+      }
+
+      // Call init
+      initStats();
+
+      // --- How It Works Scroll Animation ---
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target); // Animate once
+          }
+        });
+      }, {
+        threshold: 0.2 // Trigger when 20% visible
+      });
+
+      document.querySelectorAll('.hiw-card').forEach(el => {
+        observer.observe(el);
+      });
+
+      // --- Ticker Population ---
+
+      // --- Ticker Population ---
+      const ticker = document.getElementById('activityTicker');
+      const activities = [
+        "New Pothole reported in Imphal West",
+        "Street Light repaired in Thoubal",
+        "Garbage collection requested in Bishnupur",
+        "Water leakage fixed in Churachandpur",
+        "Traffic signal malfunction reported in Kakching",
+        "Illegal dumping reported in Ukhrul",
+        "Road blockage cleared in Senapati",
+        "Drainage overflow reported in Jiribam"
+      ];
+
+      let tickerContent = "";
+      // Repeat to Ensure smooth loop
+      for (let i = 0; i < 3; i++) {
+        activities.forEach(act => {
+          tickerContent += `<div class="ticker-item"><span>•</span> ${act}</div>`;
+        });
+      }
+      ticker.innerHTML = tickerContent;
+
+    </script>
+
+    <!-- Official Footer (Premium) -->
+    <footer class="gov-footer-premium">
+      <div class="container">
+        <div class="footer-grid">
+          <div class="footer-block">
+            <h4>Government of Manipur</h4>
+            <ul>
+              <li><a href="#">Chief Minister's Office</a></li>
+              <li><a href="#">Finance Department</a></li>
+              <li><a href="#">Public Works Department</a></li>
+              <li><a href="#">Manipur Police</a></li>
+            </ul>
+          </div>
+          <div class="footer-block">
+            <h4>Manipur Grievance Portal</h4>
+            <ul>
+              <li><a href="#">About the Platform</a></li>
+              <li><a href="#">Terms of Service</a></li>
+              <li><a href="#">Privacy Policy</a></li>
+              <li><a href="#">Accessibility Statement</a></li>
+            </ul>
+          </div>
+          <div class="footer-block">
+            <h4>Help & Support</h4>
+            <ul>
+              <li><a href="#">FAQ / Knowledge Base</a></li>
+              <li><a href="#">Track Grievance</a></li>
+              <li><a href="#">Feedback</a></li>
+              <li><a href="#">Sitemap</a></li>
+            </ul>
+          </div>
+          <div class="footer-block">
+            <h4>Contact Us</h4>
+            <p style="font-size:14px; color:#cbd5e1; line-height:1.6; margin-bottom:12px;">
+              Room 101, New Secretariat,<br>
+              Imphal, Manipur - 795001<br>
+              <strong>Toll Free:</strong> 1800-MAN-HELP
+            </p>
+            <div class="social-icons">
+              <a href="#">F</a>
+              <a href="#">X</a>
+              <a href="#">I</a>
+              <a href="#">Y</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-bottom-bar">
+          <div>&copy; 2025 Praja.ai &mdash; Government of Manipur. All Rights Reserved.</div>
+          <div>Designed & Developed by SaiyoniX Pvt.ltd</div>
+        </div>
+      </div>
+    </footer>
 </body>
 
 </html>
